@@ -84,8 +84,6 @@ void graphics_engine::render(const state& s, int grabbed_piece, double mx, doubl
     {
         int type = s.position[i].get_type();
         int color = s.position[i].get_color();
-        if (i == 0 && type != 5)
-            __debugbreak();
 
         if (grabbed_piece - 1 == i) {
             if (color == 1) {

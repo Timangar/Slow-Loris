@@ -8,6 +8,8 @@ public:
 	void gen(state& s, move m, bool init = false);
 protected:
 	void gen_opponent_data(int king_pos, int opponent_color, piece* position);
+	bool sonderkonform(int pin_line, int dest, bool check); //easter egg for all german code stealers
+	int get_pin_line(int i_pos); //returns the index of the pin line that pins the piece. -1 if not pinned.
 
 	void king_moves(int i_rank, int i_file, int color, piece* position, bool cq, bool ck);
 	void bishop_moves(int i_rank, int i_file, int color, piece* position, bool check);
@@ -24,6 +26,7 @@ protected:
 	void clear();
 
 	std::vector<std::vector<int>> x_rays; //connect an enemy sliding piece to the king through pieces. include origin.
+	std::vector<std::vector<int>> pin_lines; //x_rays that have been verified to pin a piece
 	bool attacked_squares[64]; //all the squares the opponent attacks
 	std::vector<std::vector<int>> check_lines; //the check lines connecting a piece to the king, including the piece origin
 

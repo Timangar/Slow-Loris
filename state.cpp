@@ -108,7 +108,10 @@ state::state(std::string fen)
 		en_passant_rank = 2;
 	else
 		en_passant_rank = 5;
-	en_passant = this->file[en_passant_fen[0]] + 8 * en_passant_rank;
+	if (en_passant_fen[0] != '-')
+		en_passant = en_passant_fen[0] - 'a' + 8 * en_passant_rank;
+	else
+		en_passant = 0;	//zero, although a square on the board, can't be an en passant square and will therefore be used as '-'
 
 	//initialize the repetition count with zero (no information is given)
 	repetition_count = 0;
