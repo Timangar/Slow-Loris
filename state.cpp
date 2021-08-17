@@ -117,10 +117,11 @@ state::state(std::string fen)
 	repetition_count = 0;
 
 	//initialize the fifty move count
-	fifty_move_count = floor(std::stoi(fen_components[4]) / 2);
+	fifty_move_count = std::stoi(fen_components[4]);
 
 	//initialize terminal state with false, why would you load a finished game?
 	terminal_state = false;
+	score = 0;
 }
 
 state::state(const state& other)

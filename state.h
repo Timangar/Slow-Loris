@@ -21,9 +21,10 @@ struct state
 	int en_passant;
 
 	int repetition_count;
-	int fifty_move_count;
+	int fifty_move_count; //in half moves
 
 	bool terminal_state;
+	int score; //1 if white wins, -1 if black wins, 0 for draw
 	int turn; //whose turn is it, 1 for white, -1 for black
 
 	bool castling_b_q;

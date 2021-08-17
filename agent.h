@@ -6,5 +6,8 @@ class agent
 public:
 	agent();
 
-	move make_move(state);
+	move act(state s);
+private:
+	lmg generator;
+
 };

@@ -13,7 +13,7 @@ chess_environment::chess_environment(std::string fen) : current_state(fen)
 
 void chess_environment::step(move m)
 {
-    if (current_state.contains(m)) {
+    if (current_state.contains(m) && !current_state.terminal_state) {
         history.push_back(current_state);
         gen.gen(current_state, m);
     }
@@ -83,8 +83,9 @@ void chess_environment::player_input()
     }
 }
 
-void chess_environment::agent_input(move m)
+void chess_environment::agent_input(move action)
 {
+    step(action);
 }
 
 void chess_environment::get_mouse(GLFWwindow* window, double* xpos, double* ypos, bool* lclick)

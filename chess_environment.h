@@ -9,18 +9,17 @@ public:
 	//public class functions:
 	chess_environment(std::string fen = start_fen);
 
-	void step(move action); //takes in a move and steps the environment accordingly
 	void reset();
 	void set(const state& state);
 	void set(std::string fen);
 
 	state& get_state(); //contains board position, repetition count, color of next turn, legal moves, termination state and static evaluation
-	GLFWwindow* get_window();
+	GLFWwindow* get_window(); 
 
 	void render(); //renders the environment
 
 	void player_input();
-	void agent_input(move m);
+	void agent_input(move action);
 
 private:
 	//graphics stuff
@@ -35,6 +34,8 @@ private:
 	graphics_engine engine;
 
 	//backend stuff
+	void step(move action); //takes in a move and steps the environment accordingly
+
 	lmg gen;
 	std::vector<state> history;
 	state current_state;

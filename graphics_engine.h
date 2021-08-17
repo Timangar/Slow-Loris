@@ -22,7 +22,7 @@ class graphics_engine
 public:
 	graphics_engine();
 	~graphics_engine();
-	void render(const state& s, move m);
+	//void render(const state& s, move m);
 	void render(const state& s, int grabbed_piece, double mx, double my);
 
 	GLFWwindow* get_window();
@@ -33,6 +33,8 @@ public:
 protected:
 	Object* white_pieces_init(int scaler);
 	Object* black_pieces_init(int scaler);
+
+	void window_maximize_callback(GLFWwindow* window, int maximized);
 
 	Shader* shader;
 	GLFWwindow* window;

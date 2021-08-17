@@ -75,8 +75,10 @@ void graphics_engine::render(const state& s, int grabbed_piece, double mx, doubl
     GLCall(glClear(GL_COLOR_BUFFER_BIT));
     GLCall(glClear(GL_DEPTH_BUFFER_BIT));
 
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE))
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
         glfwSetWindowMonitor(window, NULL, 0, 0.1 * scr_h, 0.9 * scr_w, 0.9 * scr_h, mode->refreshRate);
+        glfwWindowHint(GLFW_MAXIMIZED, GLFW_FALSE);
+    }
     board->render();
 
     //render the pieces for each square if there are any on it
@@ -169,7 +171,6 @@ Object* graphics_engine::black_pieces_init(int scaler)
         list[i].scale(scaler);
     return list;
 }
-
 
 
 

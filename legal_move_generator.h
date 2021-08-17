@@ -7,7 +7,7 @@ public:
 
 	void gen(state& s, move m, bool init = false);
 protected:
-	void gen_opponent_data(int king_pos, int opponent_color, piece* position);
+	void gen_opponent_data(int king_pos, int opponent_color, piece* position, int& en_passant);
 	bool sonderkonform(int pin_line, int dest, bool check); //easter egg for all german code stealers
 	int get_pin_line(int i_pos); //returns the index of the pin line that pins the piece. -1 if not pinned.
 
