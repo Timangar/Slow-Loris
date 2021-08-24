@@ -82,10 +82,10 @@ void graphics_engine::render(const state& s, int grabbed_piece, double mx, doubl
     board->render();
 
     //render the pieces for each square if there are any on it
-    for (int i = 0; i < 64; i++)
+    for (unsigned int i = 0; i < 64; i++)
     {
-        int type = s.position[i].get_type();
-        int color = s.position[i].get_color();
+        const int type = s.position[i].get_type();
+        const int color = s.position[i].get_color();
 
         if (grabbed_piece - 1 == i) {
             if (color == 1) {

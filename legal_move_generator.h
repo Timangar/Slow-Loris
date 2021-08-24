@@ -7,20 +7,20 @@ public:
 
 	void gen(state& s, move m, bool init = false);
 protected:
-	void gen_opponent_data(int king_pos, int opponent_color, piece* position, int& en_passant);
+	void gen_opponent_data(int king_pos, int opponent_color, const std::array<piece, 64>& position, int& en_passant);
 	bool sonderkonform(int pin_line, int dest, bool check); //easter egg for all german code stealers
 	int get_pin_line(int i_pos); //returns the index of the pin line that pins the piece. -1 if not pinned.
 
-	void king_moves(int i_rank, int i_file, int color, piece* position, bool cq, bool ck);
-	void bishop_moves(int i_rank, int i_file, int color, piece* position, bool check);
-	void knight_moves(int i_rank, int i_file, int color, piece* position, bool check);
-	void rook_moves(int i_rank, int i_file, int color, piece* position, bool check);
-	void pawn_moves(int i_rank, int i_file, int color, piece* position, int en_passant, bool check);
+	void king_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool cq, bool ck);
+	void bishop_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool check);
+	void knight_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool check);
+	void rook_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool check);
+	void pawn_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, int en_passant, bool check);
 
 	void opponent_king_data(int i_rank, int i_file);
-	void opponent_bishop_data(int i_rank, int i_file, int king_pos, piece* position);
+	void opponent_bishop_data(int i_rank, int i_file, int king_pos, const std::array<piece, 64>& position);
 	void opponent_knight_data(int i_rank, int i_file, int king_pos);
-	void opponent_rook_data(int i_rank, int i_file, int king_pos, piece* position);
+	void opponent_rook_data(int i_rank, int i_file, int king_pos, const std::array<piece, 64>& position);
 	void opponent_pawn_data(int i_rank, int i_file, int opponent_color, int king_pos);
 
 	void clear();

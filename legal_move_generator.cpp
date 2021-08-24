@@ -189,7 +189,7 @@ void legal_move_generator::gen(state& s, move m, bool init)
 	clear();
 }
 
-void legal_move_generator::gen_opponent_data(int king_pos, int opponent_color, piece* position, int& en_passant)
+void legal_move_generator::gen_opponent_data(int king_pos, int opponent_color, const std::array<piece, 64>& position, int& en_passant)
 {
 	//data for king
 	//for each piece of opponent color, get their x_ray, their attacked squares and their check line if there
@@ -319,25 +319,26 @@ int legal_move_generator::get_pin_line(int i_pos)
 	return -1;
 }
 
-void legal_move_generator::king_moves(int i_rank, int i_file, int color, piece* pos, bool ck, bool cq)
+void legal_move_generator::king_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& pos, bool ck, bool cq)
 {
+	legal_moves.reserve(8);
 	int i = i_rank * RANK + i_file;
 	if (i_rank && !attacked_squares[i - RANK] && pos[i - RANK].get_color() != color)
-		legal_moves.push_back({ i, i - RANK });
+		legal_moves.emplace_back(i, i - RANK);
 	if (i_file && !attacked_squares[i - FILE__] && pos[i - FILE__].get_color() != color)
-		legal_moves.push_back({ i, i - FILE__ });
+		legal_moves.emplace_back(i, i - FILE__ );
 	if (i_rank < 7 && !attacked_squares[i + RANK] && pos[i + RANK].get_color() != color)
-		legal_moves.push_back({ i, i + RANK });
+		legal_moves.emplace_back(i, i + RANK);
 	if (i_file < 7 && !attacked_squares[i + FILE__] && pos[i + FILE__].get_color() != color)
-		legal_moves.push_back({ i, i + FILE__ });
+		legal_moves.emplace_back(i, i + FILE__);
 	if (i_file && i_rank && !attacked_squares[i - FILE__ - RANK] && pos[i - FILE__ - RANK].get_color() != color)
-		legal_moves.push_back({ i, i - FILE__ - RANK });
+		legal_moves.emplace_back(i, i - FILE__ - RANK);
 	if (i_file && i_rank < 7 && !attacked_squares[i - FILE__ + RANK] && pos[i - FILE__ + RANK].get_color() != color)
-		legal_moves.push_back({ i, i - FILE__ + RANK });
+		legal_moves.emplace_back(i, i - FILE__ + RANK);
 	if (i_file < 7 && i_rank < 7 && !attacked_squares[i + FILE__ + RANK] && pos[i + FILE__ + RANK].get_color() != color)
-		legal_moves.push_back({ i, i + FILE__ + RANK });
+		legal_moves.emplace_back(i, i + FILE__ + RANK);
 	if (i_file < 7 && i_rank && !attacked_squares[i + FILE__ - RANK] && pos[i + FILE__ - RANK].get_color() != color)
-		legal_moves.push_back({ i, i + FILE__ - RANK });
+		legal_moves.emplace_back(i, i + FILE__ - RANK);
 
 	//castling rights
 	int rank = 0;
@@ -349,18 +350,19 @@ void legal_move_generator::king_moves(int i_rank, int i_file, int color, piece* 
 			if (!attacked_squares[rank * RANK + 6])
 				if (!pos[rank * RANK + 5].get_color())
 					if (!pos[rank * RANK + 6].get_color())
-						legal_moves.push_back({ i, rank * RANK + 6, true });
+						legal_moves.emplace_back(i, rank * RANK + 6, true);
 	}
 	if (cq)
 	{
 		if (!attacked_squares[rank * RANK + 2] && !attacked_squares[rank * RANK + 3]
 			&& !pos[rank * RANK + 2].get_color() && !pos[rank * RANK + 3].get_color())
-			legal_moves.push_back({ i, rank * RANK + 2, true });
+			legal_moves.emplace_back(i, rank * RANK + 2, true);
 	}
 }
 
-void legal_move_generator::bishop_moves(int i_rank, int i_file, int color, piece* position, bool check)
+void legal_move_generator::bishop_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool check)
 {
+	legal_moves.reserve(14);
 	//if double check, return. only king can move
 	if (check) {
 		if (check_lines.size() > 1)
@@ -381,7 +383,7 @@ void legal_move_generator::bishop_moves(int i_rank, int i_file, int color, piece
 		if (position[dest].get_color() == color)
 			break;
 		if (sonderkonform(pinline, dest, check))
-			legal_moves.push_back({ i, dest });
+			legal_moves.emplace_back(i, dest);
 		if (position[dest].get_color() == color * -1)
 			break;
 	}
@@ -394,7 +396,7 @@ void legal_move_generator::bishop_moves(int i_rank, int i_file, int color, piece
 		if (position[dest].get_color() == color)
 			break;
 		if (sonderkonform(pinline, dest, check))
-			legal_moves.push_back({ i, dest });
+			legal_moves.emplace_back(i, dest);
 		if (position[dest].get_color() == color * -1)
 			break;
 	}
@@ -407,7 +409,7 @@ void legal_move_generator::bishop_moves(int i_rank, int i_file, int color, piece
 		if (position[dest].get_color() == color)
 			break;
 		if (sonderkonform(pinline, dest, check))
-			legal_moves.push_back({ i, dest });
+			legal_moves.emplace_back(i, dest);
 		if (position[dest].get_color() == color * -1)
 			break;
 	}
@@ -420,14 +422,15 @@ void legal_move_generator::bishop_moves(int i_rank, int i_file, int color, piece
 		if (position[dest].get_color() == color)
 			break;
 		if (sonderkonform(pinline, dest, check))
-			legal_moves.push_back({ i, dest });
+			legal_moves.emplace_back(i, dest);
 		if (position[dest].get_color() == color * -1)
 			break;
 	}
 }
 
-void legal_move_generator::knight_moves(int i_rank, int i_file, int color, piece* position, bool check)
+void legal_move_generator::knight_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool check)
 {
+	legal_moves.reserve(8);
 	int i = i_rank * RANK + i_file;
 	int pinline = get_pin_line(i);
 	const int NNE = i + 1 - 2 * RANK;
@@ -442,46 +445,47 @@ void legal_move_generator::knight_moves(int i_rank, int i_file, int color, piece
 	//north north east
 	if (sonderkonform(pinline, NNE, check))
 		if (i_file < 7 && i_rank > 1 && position[NNE].get_color() != color)
-			legal_moves.push_back({ i, NNE });
+			legal_moves.emplace_back(i, NNE);
 
 	//north east east
 	if (sonderkonform(pinline, NEE, check))
 		if (i_rank && i_file < 6 && position[NEE].get_color() != color)
-			legal_moves.push_back({ i, NEE });
+			legal_moves.emplace_back(i, NEE);
 
 	//south east east
 	if (sonderkonform(pinline, SEE, check))
 		if (i_rank < 7 && i_file < 6 && position[SEE].get_color() != color)
-			legal_moves.push_back({ i, SEE });
+			legal_moves.emplace_back(i, SEE);
 	
 	//south south east
 	if (sonderkonform(pinline, SSE, check))
 		if (i_file < 7 && i_rank < 6 && position[SSE].get_color() != color) 
-			legal_moves.push_back({ i, SSE });
+			legal_moves.emplace_back(i, SSE);
 	
 	//south south west
 	if (sonderkonform(pinline, SSW, check))
 		if (i_file && i_rank < 6 && position[SSW].get_color() != color) 
-			legal_moves.push_back({ i, SSW });
+			legal_moves.emplace_back(i, SSW);
 	
 	// south west west
 	if (sonderkonform(pinline, SWW, check))
 		if (i_file > 1 && i_rank < 7 && position[SWW].get_color() != color) 
-			legal_moves.push_back({ i, SWW });
+			legal_moves.emplace_back(i, SWW);
 	
 	//north west west
 	if (sonderkonform(pinline, NWW, check))
 		if (i_file > 1 && i_rank && position[NWW].get_color() != color) 
-			legal_moves.push_back({ i, NWW });
+			legal_moves.emplace_back(i, NWW);
 	
 	//north north west
 	if (sonderkonform(pinline, NNW, check))
 		if (i_file && i_rank > 1 && position[NNW].get_color() != color) 
-			legal_moves.push_back({ i, NNW });
+			legal_moves.emplace_back(i, NNW);
 }
 
-void legal_move_generator::rook_moves(int i_rank, int i_file, int color, piece* position, bool check)
+void legal_move_generator::rook_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool check)
 {
+	legal_moves.reserve(14);
 	int i = i_rank * RANK + i_file;
 	int pinline = get_pin_line(i);
 
@@ -492,7 +496,7 @@ void legal_move_generator::rook_moves(int i_rank, int i_file, int color, piece* 
 		if (position[dest].get_color() == color)
 			break;
 		if (sonderkonform(pinline, dest, check))
-			legal_moves.push_back({ i, dest });
+			legal_moves.emplace_back(i, dest);
 		if (position[dest].get_color() == color * -1)
 			break;
 	}
@@ -504,7 +508,7 @@ void legal_move_generator::rook_moves(int i_rank, int i_file, int color, piece* 
 		if (position[dest].get_color() == color)
 			break;
 		if (sonderkonform(pinline, dest, check))
-			legal_moves.push_back({ i, dest });
+			legal_moves.emplace_back(i, dest);
 		if (position[dest].get_color() == color * -1)
 			break;
 	}
@@ -516,7 +520,7 @@ void legal_move_generator::rook_moves(int i_rank, int i_file, int color, piece* 
 		if (position[dest].get_color() == color)
 			break;
 		if (sonderkonform(pinline, dest, check))
-			legal_moves.push_back({ i, dest });
+			legal_moves.emplace_back(i, dest);
 		if (position[dest].get_color() == color * -1)
 			break;
 	}
@@ -528,14 +532,15 @@ void legal_move_generator::rook_moves(int i_rank, int i_file, int color, piece* 
 		if (position[dest].get_color() == color)
 			break;
 		if (sonderkonform(pinline, dest, check))
-			legal_moves.push_back({ i, dest });
+			legal_moves.emplace_back(i, dest);
 		if (position[dest].get_color() == color * -1)
 			break;
 	}
 }
 
-void legal_move_generator::pawn_moves(int i_rank, int i_file, int color, piece* position, int en_passant, bool check)
+void legal_move_generator::pawn_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, int en_passant, bool check)
 {
+	legal_moves.reserve(2);
 	int i = i_rank * 8 + i_file;
 	int pinline = get_pin_line(i);
 	int promotion_rank = 0;
@@ -557,14 +562,14 @@ void legal_move_generator::pawn_moves(int i_rank, int i_file, int color, piece* 
 	int dest = i + direction * RANK;
 	if (sonderkonform(pinline, dest, check))
 		if (!position[dest].get_color() && dest >= 0)
-			legal_moves.push_back({ i, dest, false, false, promotion });
+			legal_moves.emplace_back(i, dest, false, false, promotion);
 
 	//advance forward 2
 	if (i_rank == start_rank) {
 		dest = i + 2 * direction * RANK;
 		if (sonderkonform(pinline, dest, check))
 			if (!position[dest].get_color() && !position[i + direction * RANK].get_color()) //can't jump over pieces
-				legal_moves.push_back({ i, dest });
+				legal_moves.emplace_back(i, dest);
 	}
 	//capture left
 	if (i_file) {
@@ -572,10 +577,10 @@ void legal_move_generator::pawn_moves(int i_rank, int i_file, int color, piece* 
 		if (sonderkonform(pinline, dest, check))
 		{
 			if (position[dest].get_color() == -1 * color)
-				legal_moves.push_back({ i, dest, false, false, promotion });
+				legal_moves.emplace_back(i, dest, false, false, promotion);
 			//en passant
 			else if (dest == en_passant && i_rank != start_rank && en_passant)
-				legal_moves.push_back({ i, dest, false, true });
+				legal_moves.emplace_back(i, dest, false, true);
 		}
 	}
 	//capture right
@@ -584,10 +589,10 @@ void legal_move_generator::pawn_moves(int i_rank, int i_file, int color, piece* 
 		if (sonderkonform(pinline, dest, check))
 		{ 
 			if (position[dest].get_color() == -1 * color)
-				legal_moves.push_back({ i, dest, false, false, promotion });
+				legal_moves.emplace_back(i, dest, false, false, promotion);
 			//en passant
 			else if (dest == en_passant && i_rank != start_rank && en_passant)
-				legal_moves.push_back({ i, dest, false, true });
+				legal_moves.emplace_back(i, dest, false, true);
 		}
 	}
 }
@@ -613,10 +618,12 @@ void legal_move_generator::opponent_king_data(int i_rank, int i_file)
 		attacked_squares[i + FILE__ - RANK] = true;
 }
 
-void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_pos, piece* position)
+void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_pos, const std::array<piece, 64>& position)
 {	
 	std::vector<int> x_ray;
 	std::vector<int> check_line;
+	x_ray.reserve(7);
+	check_line.reserve(7);
 	bool obst = false;
 	//rook - directions are N, S, W and E
 			//up direction
@@ -631,7 +638,7 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.emplace_back(i_rank * 8 + i_file);
 				check_lines.push_back(check_line);
 				break;
 			}
@@ -647,6 +654,8 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 	//clear variables
 	x_ray.clear();
 	check_line.clear();
+	x_ray.reserve(7);
+	check_line.reserve(7);
 	obst = false;
 
 	//down direction
@@ -661,7 +670,7 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.emplace_back(i_rank * 8 + i_file);
 				check_lines.push_back(check_line);
 				break;
 			}
@@ -677,6 +686,8 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 	//clear variables
 	x_ray.clear();
 	check_line.clear();
+	x_ray.reserve(7);
+	check_line.reserve(7);
 	obst = false;
 
 	//left direction
@@ -691,7 +702,7 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.emplace_back(i_rank * 8 + i_file);
 				check_lines.push_back(check_line);
 				break;
 			}
@@ -707,6 +718,8 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 	//clear variables
 	x_ray.clear();
 	check_line.clear();
+	x_ray.reserve(7);
+	check_line.reserve(7);
 	obst = false;
 
 	//right direction
@@ -721,7 +734,7 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.emplace_back(i_rank * 8 + i_file);
 				check_lines.push_back(check_line);
 				break;
 			}
@@ -735,10 +748,12 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 	}
 }
 
-void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king_pos, piece* position)
+void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king_pos, const std::array<piece, 64>& position)
 {
 	std::vector<int> x_ray;
 	std::vector<int> check_line;
+	x_ray.reserve(7);
+	check_line.reserve(7);
 	bool obst = false;
 	//bishop - directions are -rank * 8 - file, -rank * 8 + file, rank * 8 - file, rank * 8 + file
 	//north east direction
@@ -753,7 +768,7 @@ void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.emplace_back(i_rank * 8 + i_file);
 				check_lines.push_back(check_line);
 				break;
 			}
@@ -769,6 +784,8 @@ void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king
 	//clear variables
 	x_ray.clear();
 	check_line.clear();
+	x_ray.reserve(7);
+	check_line.reserve(7);
 	obst = false;
 
 	//north west direction
@@ -783,7 +800,7 @@ void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.emplace_back(i_rank * 8 + i_file);
 				check_lines.push_back(check_line);
 				break;
 			}
@@ -799,6 +816,8 @@ void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king
 	//clear variables
 	x_ray.clear();
 	check_line.clear();
+	x_ray.reserve(7);
+	check_line.reserve(7);
 	obst = false;
 
 	//south west direction
@@ -813,7 +832,7 @@ void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.emplace_back(i_rank * 8 + i_file);
 				check_lines.push_back(check_line);
 				break;
 			}
@@ -829,6 +848,8 @@ void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king
 	//clear variables
 	x_ray.clear();
 	check_line.clear();
+	x_ray.reserve(7);
+	check_line.reserve(7);
 	obst = false;
 
 	//south east direction
@@ -843,7 +864,7 @@ void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.emplace_back(i_rank * 8 + i_file);
 				check_lines.push_back(check_line);
 				break;
 			}
@@ -920,12 +941,12 @@ void legal_move_generator::opponent_pawn_data(int i_rank, int i_file, int oppone
 	if (i_file) {
 		attacked_squares[i - opponent_color * RANK - FILE__] = true;
 		if (king_pos == i - opponent_color * RANK - FILE__)
-			check_lines.push_back({ i });
+			check_lines.emplace_back(i);
 	}
 	if (i_file < 7) {
 		attacked_squares[i - opponent_color * RANK + FILE__] = true;
 		if (king_pos == i - opponent_color * RANK + FILE__)
-			check_lines.push_back({ i });
+			check_lines.emplace_back(i);
 	}
 }
 

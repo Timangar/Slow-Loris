@@ -20,17 +20,19 @@ void input(chess_environment& env, agent& agent)
     }
 }
 
-int main(void)
+void play()
 {
-    chess_environment env;
-    int turn;
+    using namespace std::literals::chrono_literals;
+
+    chess_environment* env = new chess_environment;
     agent loris;
+    int turn;
     int color = WHITE;
-    while (!glfwWindowShouldClose(env.get_window()))
+    while (!glfwWindowShouldClose(env->get_window()))
     {
         static bool print = true;
-        if (print && env.get_state().terminal_state) {
-            switch (env.get_state().score) {
+        if (print && env->get_state().terminal_state) {
+            switch (env->get_state().score) {
             case -1:
                 std::cout << "black wins!";
                 break;
@@ -46,12 +48,12 @@ int main(void)
             print = false;
         }
         else {
-            turn = env.get_state().turn;
+            turn = env->get_state().turn;
             if (turn == color)
-                env.player_input();
+                env->player_input();
             else
-                env.agent_input(loris.act(env.get_state()));
+                env->agent_input(loris.act(env->get_state()));
         }
-        env.render();
+        env->render();
     }
 }

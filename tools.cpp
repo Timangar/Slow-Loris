@@ -9,8 +9,8 @@ void tools::log_state(state& s)
 	{
 		if (i % 8 == 0)
 			std::cout << std::endl; 
-		char t = s.get_position()[i].get_type();
-		if (s.get_position()[i].get_color() == -1)
+		char t = s.get_position()->at(i).get_type();
+		if (s.get_position()->at(i).get_color() == -1)
 			t = tolower(t);
 		if (t == 0)
 			std::cout << (char)254;

@@ -15,7 +15,6 @@ std::unordered_map<char, int> state::file = {
 
 state::state(std::string fen)
 {
-	position = new piece[64];
 	//default initialization so the compiler is happy
 	pos_bk = file['e'];
 	pos_wk = file['e'] + 56;
@@ -124,21 +123,6 @@ state::state(std::string fen)
 	score = 0;
 }
 
-state::state(const state& other)
-	: legal_moves(other.legal_moves), repetition_count(other.repetition_count),
-	fifty_move_count(other.fifty_move_count), terminal_state(other.terminal_state), turn(other.turn),
-	pos_bk(other.pos_bk), pos_wk(other.pos_wk), castling_b_k(other.castling_b_k), castling_b_q(other.castling_b_q),
-	castling_w_k(other.castling_w_k), castling_w_q(other.castling_w_q), en_passant(other.en_passant)
-{
-	position = new piece[64];
-	memcpy(position, other.position, 64 * sizeof(piece));
-}
-
-state::~state()
-{
-	delete[] position;
-}
-
 bool state::contains(move& m)
 {
 	for (move i : legal_moves)
@@ -147,9 +131,9 @@ bool state::contains(move& m)
 	return false;
 }
 
-piece* state::get_position()
+std::array<piece, 64>* state::get_position()
 {
-	return position;
+	return &position;
 }
 
 int state::get_turn()

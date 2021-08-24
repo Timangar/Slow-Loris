@@ -33,8 +33,11 @@
     <ClInclude Include="Object.h" />
     <ClInclude Include="piece.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="src\perft.h" />
+    <ClInclude Include="src\play.h" />
     <ClInclude Include="state.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="timer.h" />
     <ClInclude Include="tools.h" />
     <ClInclude Include="VertexArray.h" />
     <ClInclude Include="VertexBuffer.h" />
@@ -53,10 +56,13 @@
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="piece.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="src\Perftest.cpp" />
     <ClCompile Include="src\play.cpp" />
+    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="state.cpp" />
     <ClCompile Include="stb_image_compiler.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="timer.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="VertexArray.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />

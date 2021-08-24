@@ -1,6 +1,6 @@
 #pragma once
 #include <unordered_map>
-typedef unsigned int const type;
+typedef int const type;
 typedef int const color;
 
 typedef class piece
@@ -16,7 +16,7 @@ public:
 	static std::unordered_map<char, int> types;
 	static std::unordered_map<char, int> colors;
 private:
-	unsigned int piece_type;
+	int piece_type;
 	int piece_color;
 } p;
 
