@@ -1,5 +1,5 @@
 #include "move.h"
-
+#include <cassert>
 move::move(int origin, int destination, bool castle, bool en_passant, bool promotion)
 {
 	this->origin = origin;

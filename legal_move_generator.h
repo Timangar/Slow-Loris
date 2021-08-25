@@ -1,5 +1,7 @@
 #pragma once
 #include "state.h"
+#include "move_array.h"
+
 typedef class legal_move_generator
 {
 public:
@@ -25,10 +27,14 @@ protected:
 
 	void clear();
 
-	std::vector<std::vector<int>> x_rays; //connect an enemy sliding piece to the king through pieces. include origin.
-	std::vector<std::vector<int>> pin_lines; //x_rays that have been verified to pin a piece
-	bool attacked_squares[64]; //all the squares the opponent attacks
-	std::vector<std::vector<int>> check_lines; //the check lines connecting a piece to the king, including the piece origin
+	void push_x_ray(move_array x);
+	void push_pin_line(move_array pin_line);
+	void push_check_line(move_array c);
+
+	std::array<move_array, 48> x_rays;		//x_rays between sliding pieces and king
+	std::array<move_array, 8> pin_lines;	//x_rays that have been verified to pin a piece
+	std::array<move_array, 2> check_lines;	//the check lines connecting a piece to the king, including the piece origin
+	bool attacked_squares[64];						//all the squares the opponent attacks
 
 	std::vector<move> legal_moves;
 } lmg;

@@ -26,7 +26,7 @@ void play()
 
     chess_environment* env = new chess_environment;
     agent loris;
-    int turn;
+    int turn = WHITE;
     int color = WHITE;
     while (!glfwWindowShouldClose(env->get_window()))
     {
@@ -52,7 +52,9 @@ void play()
             if (turn == color)
                 env->player_input();
             else
-                env->agent_input(loris.act(env->get_state()));
+                //env->agent_input(loris.act(env->get_state()));
+                env->player_input();
+
         }
         env->render();
     }

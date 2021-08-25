@@ -30,6 +30,7 @@
     <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="legal_move_generator.h" />
     <ClInclude Include="move.h" />
+    <ClInclude Include="move_array.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="piece.h" />
     <ClInclude Include="Shader.h" />
@@ -53,6 +54,7 @@
     <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="legal_move_generator.cpp" />
     <ClCompile Include="move.cpp" />
+    <ClCompile Include="move_array.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="piece.cpp" />
     <ClCompile Include="Shader.cpp" />
