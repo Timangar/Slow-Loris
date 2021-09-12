@@ -8,6 +8,5 @@ public:
 
 	move act(state s);
 private:
-	lmg generator;
-
+	lmg gen;
 };
