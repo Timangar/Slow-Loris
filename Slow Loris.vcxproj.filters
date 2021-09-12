@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="graphics">
+      <UniqueIdentifier>{6ee61c8b-709c-4811-8406-cf5b95ffb24b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\header files">
+      <UniqueIdentifier>{4fbcc88a-a6b4-4ef5-99d7-c2bc9985d38e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\source files">
+      <UniqueIdentifier>{56223a7c-114d-4856-ba2d-12f94df501be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\shaders">
+      <UniqueIdentifier>{e68342ca-cc47-406c-ae8a-f7b432b89826}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="chess_environment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="move.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="agent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="legal_move_generator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Board.h">
+      <Filter>graphics\header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Button.h">
+      <Filter>graphics\header files</Filter>
+    </ClInclude>
+    <ClInclude Include="GLCall.h">
+      <Filter>graphics\header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Hitbox.h">
+      <Filter>graphics\header files</Filter>
+    </ClInclude>
+    <ClInclude Include="IndexBuffer.h">
+      <Filter>graphics\header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>graphics\header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>graphics\header files</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>graphics\header files</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexArray.h">
+      <Filter>graphics\header files</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexBuffer.h">
+      <Filter>graphics\header files</Filter>
+    </ClInclude>
+    <ClInclude Include="piece.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics_engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DEFINES.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\perft.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\play.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="move_array.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="chess_environment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="move.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="agent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\play.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="legal_move_generator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Board.cpp">
+      <Filter>graphics\source files</Filter>
+    </ClCompile>
+    <ClCompile Include="Button.cpp">
+      <Filter>graphics\source files</Filter>
+    </ClCompile>
+    <ClCompile Include="GLCall.cpp">
+      <Filter>graphics\source files</Filter>
+    </ClCompile>
+    <ClCompile Include="Hitbox.cpp">
+      <Filter>graphics\source files</Filter>
+    </ClCompile>
+    <ClCompile Include="IndexBuffer.cpp">
+      <Filter>graphics\source files</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>graphics\source files</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>graphics\source files</Filter>
+    </ClCompile>
+    <ClCompile Include="stb_image_compiler.cpp">
+      <Filter>graphics\source files</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>graphics\source files</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexArray.cpp">
+      <Filter>graphics\source files</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexBuffer.cpp">
+      <Filter>graphics\source files</Filter>
+    </ClCompile>
+    <ClCompile Include="piece.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics_engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Perftest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="move_array.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="FragmentShader.txt">
+      <Filter>graphics\shaders</Filter>
+    </Text>
+    <Text Include="FragmentShader2.txt">
+      <Filter>graphics\shaders</Filter>
+    </Text>
+    <Text Include="VertexShader.txt">
+      <Filter>graphics\shaders</Filter>
+    </Text>
+  </ItemGroup>
+</Project>
