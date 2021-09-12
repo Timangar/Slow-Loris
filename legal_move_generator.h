@@ -7,7 +7,7 @@ typedef class legal_move_generator
 public:
 	legal_move_generator();
 
-	void gen(state& s, move m, bool init = false);
+	void gen(state& s, move m, const std::vector<state>& history, bool init = false);
 protected:
 	void gen_opponent_data(int king_pos, int opponent_color, const std::array<piece, 64>& position, int& en_passant);
 	bool sonderkonform(int pin_line, int dest, bool check); //easter egg for all german code stealers

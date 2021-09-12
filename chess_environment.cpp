@@ -10,7 +10,7 @@ chess_environment::chess_environment(std::string fen, bool user_interface) : cur
         std::cout << "WARNING! USER INTERFACE DISABLED, DO NOT RENDER!" << std::endl;
         engine = nullptr;
     }
-    gen.gen(current_state, { 0,0 }, true);
+    gen.gen(current_state, { 0,0 }, history, true);
     grabbed_piece = 0;
     mx = 0.0;
     my = 0.0;
@@ -26,7 +26,7 @@ void chess_environment::step(move m)
 {
     if (current_state.contains(m) && !current_state.terminal_state) {
         history.push_back(current_state);
-        gen.gen(current_state, m);
+        gen.gen(current_state, m, history);
     }
     else
         return;

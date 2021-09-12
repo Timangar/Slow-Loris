@@ -10,6 +10,8 @@ public:
 	piece(int type, int color);
 	piece(char type, int color);
 
+	bool operator==(const piece& other) const;
+
 	type get_type() const;
 	color get_color() const;
 

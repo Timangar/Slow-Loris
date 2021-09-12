@@ -40,6 +40,14 @@ piece::piece(char type, int color)
 	assert(color <= 1 && color >= -1);
 }
 
+bool piece::operator==(const piece& other) const
+{
+	if (piece_type == other.piece_type &&
+		piece_color == other.piece_color)
+		return true;
+	return false;
+}
+
 type piece::get_type() const
 {
 	assert(piece_type < 7);

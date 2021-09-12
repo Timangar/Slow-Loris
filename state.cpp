@@ -140,3 +140,26 @@ int state::get_turn()
 {
 	return turn;
 }
+
+bool state::operator==(const state& other) const
+{
+	if (
+		position == other.position &&
+		en_passant == other.en_passant &&
+		*this % other
+		)
+		return true;
+	return false;
+}
+
+bool state::operator%(const state& other) const
+{
+	if (
+		castling_b_k == other.castling_b_k &&
+		castling_b_q == other.castling_b_q &&
+		castling_w_k == other.castling_w_k &&
+		castling_w_q == other.castling_w_q
+		)
+		return true;
+	return false;
+}

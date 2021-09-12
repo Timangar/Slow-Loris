@@ -5,11 +5,15 @@
 
 legal_move_generator::legal_move_generator() : attacked_squares{ 0 } {}
 
-void legal_move_generator::gen(state& s, move m, bool init)
+void legal_move_generator::gen(state& s, move m, const std::vector<state>& history, bool init)
 {
 	if (!init) {
+		bool increment_fifty_move_count = true;
 		//make normal part of move
 		//-------------------------
+		//check if move is a captures
+		if (s.position[m.destination].get_color())
+			increment_fifty_move_count = false;
 		//check for promotion, because the piece type has to be changed
 		if (m.promotion)
 			s.position[m.destination] = {2, s.turn};
@@ -26,8 +30,33 @@ void legal_move_generator::gen(state& s, move m, bool init)
 				s.en_passant = m.destination + 8;
 			else if (s.position[m.destination].get_color() == BLACK && floor(m.destination / 8) == 3 && floor(m.origin / 8) == 1)
 				s.en_passant = m.destination - 8;
+			increment_fifty_move_count = false;
 		}
 		
+		//check for terminal state due to 50 move rule or threefold repetition
+		//----------------------------------------------------------------------
+		//50 move rule
+		if (increment_fifty_move_count) {
+			s.fifty_move_count++;
+			if (s.fifty_move_count >= 100) {
+				s.terminal_state = true;
+				s.score = 0;
+			}
+		}
+		else
+			s.fifty_move_count = 0;
+		//threefold repetition
+		if (history.size() > 4) {
+			for (unsigned int i = 4; i <= s.fifty_move_count; i += 2) {
+				if (history[(history.size() - i)] == s)
+					s.repetition_count = history[history.size() - 1].repetition_count + 1;
+			}
+			if (s.repetition_count >= 3) {
+				s.terminal_state = true;
+				s.score = 0;
+			}
+		}
+
 		//check whether the move affects castling rights
 		//-----------------------------------------------
 		//king move:

@@ -13,6 +13,9 @@ struct state
 	bool contains(move& m);
 	std::array<piece, 64>* get_position();
 	int get_turn();
+
+	bool operator==(const state& other) const;
+	bool operator%(const state& other) const;
 	
 	std::array<piece, 64> position; //an array representing the FEN board in terms of piece classes and "empty" pieces
 	std::vector<move> legal_moves;

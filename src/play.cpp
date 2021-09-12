@@ -31,30 +31,33 @@ void play()
     while (!glfwWindowShouldClose(env->get_window()))
     {
         static bool print = true;
-        if (print && env->get_state().terminal_state) {
-            switch (env->get_state().score) {
-            case -1:
-                std::cout << "black wins!";
-                break;
-            case 0:
-                std::cout << "draw!";
-                break;
-            case 1:
-                std::cout << "white wins!";
-                break;
-            default:
-                std::cout << "damn, something really went wrong!";
+        if (env->get_state().terminal_state) {
+            if (print) {
+                switch (env->get_state().score) {
+                case -1:
+                    std::cout << "black wins!";
+                    break;
+                case 0:
+                    std::cout << "draw!";
+                    break;
+                case 1:
+                    std::cout << "white wins!";
+                    break;
+                default:
+                    std::cout << "damn, something really went wrong!";
+                }
+                print = false;
             }
-            print = false;
         }
         else {
             turn = env->get_state().turn;
             if (turn == color)
+                //env->agent_input(loris.act(env->get_state()));
                 env->player_input();
             else
                 //env->agent_input(loris.act(env->get_state()));
                 env->player_input();
-
+            //std::this_thread::sleep_for(0.1s);
         }
         env->render();
     }
