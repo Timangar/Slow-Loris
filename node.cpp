@@ -10,3 +10,5 @@ node::node(const node* parent, move action)
 	lmg gen;
 	gen.gen(current, action, history);
 }
+
+node::node(state s) : n(0), t(0), o(0), action(0, 0), current(s) {}

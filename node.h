@@ -5,6 +5,7 @@ class node
 {
 public:
 	node(const node* parent, move action);
+	node(state s);
 private:
 	state current;					//current state of this node
 	std::vector<state> history;		//history leading to this node
