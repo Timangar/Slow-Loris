@@ -13,20 +13,25 @@ public:
 	int t() const;
 	int o() const;
 
-	bool terminal();				//true if the state is a terminal state
-	int score();					//1, 0 or -1 (white win, draw or black win)
+	bool terminal() const;				//true if the state is a terminal state
+	int score() const;					//1, 0 or -1 (white win, draw or black win)
+
+	const state& current() const;
+
+	std::array<piece, 64> position() const;
+	const move& action() const;
 
 	void increment_n();
 	void increment_t(double value);
 	void increment_o();
 	void decrement_o();
 
-	int color();
+	int color() const;
 
 	std::vector<node>& children();
 
 private:
-	state current;					//current state of this node
+	state _current;					//current state of this node
 	std::vector<state> _history;	//history leading to this node
 
 	std::vector<node> _children;	//leaf nodes

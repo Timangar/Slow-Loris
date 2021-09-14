@@ -2,22 +2,25 @@
 #include <cassert>
 
 node::node(const node* parent, move action)
-	: _n(0), _t(0), _o(0), _action(action), current(parent->current)
+	: _n(0), _t(0), _o(0), _action(action), _current(parent->_current)
 {
 	if (!action.castle &&
-		!parent->current.position[action.destination].get_color() &&
-		!parent->current.position[action.origin].get_type() == 6)
+		!parent->_current.position[action.destination].get_color() &&
+		!parent->_current.position[action.origin].get_type() == 6)
 		_history = parent->_history;
 	lmg gen;
-	gen.gen(current, action, _history);
-	_children.reserve(current.legal_moves.size());
+	gen.gen(_current, action, _history);
+	_children.reserve(_current.legal_moves.size());
 }
 
-node::node(state s) : _n(0), _t(0), _o(0), _action(0, 0), current(s) {}
+node::node(state s) : _n(0), _t(0), _o(0), _action(0, 0), _current(s) 
+{
+	_children.reserve(_current.legal_moves.size());
+}
 
 void node::expand()
 {
-	for (move m : current.legal_moves)
+	for (move m : _current.legal_moves)
 		_children.emplace_back(this, m);
 }
 
@@ -36,15 +39,31 @@ int node::o() const
 	return _o;
 }
 
-bool node::terminal()
+bool node::terminal() const
 {
-	return current.terminal_state;
+	return _current.terminal_state;
 }
 
-int node::score()
+int node::score() const
 {
-	assert(current.terminal_state);
-	return current.score;
+	assert(_current.terminal_state);
+	return _current.score;
+}
+
+const state& node::current() const
+{
+	return _current;
+}
+
+std::array<piece, 64> node::position() const
+{
+	return _current.position;
+}
+
+const move& node::action() const
+{
+	// TODO: hier return-Anweisung eingeben
+	return _action;
 }
 
 void node::increment_n()
@@ -67,9 +86,9 @@ void node::decrement_o()
 	_o--;
 }
 
-int node::color()
+int node::color() const
 {
-	return current.turn;
+	return _current.turn;
 }
 
 std::vector<node>& node::children()

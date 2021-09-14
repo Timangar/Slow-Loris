@@ -691,7 +691,7 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.back() = i_rank * 8 + i_file;
 				if (rank);
 					attacked_squares[dest - RANK] = true; //king can't escape backwards
 				push_check_line(check_line);
@@ -723,7 +723,7 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.back() = i_rank * 8 + i_file;
 				if (rank < 7)
 					attacked_squares[dest + RANK] = true; //king can't escape backwards
 				push_check_line(check_line);
@@ -755,7 +755,7 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.back() = i_rank * 8 + i_file;
 				if (file)
 					attacked_squares[dest - 1] = true; //king can't escape backwards
 				push_check_line(check_line);
@@ -787,7 +787,7 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.back() = i_rank * 8 + i_file;
 				if (file < 7)
 					attacked_squares[dest + 1] = true;
 				push_check_line(check_line);
@@ -821,7 +821,7 @@ void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.back() = i_rank * 8 + i_file;
 				if (rank && file < 7)
 					attacked_squares[dest - RANK + 1] = true;
 				push_check_line(check_line);
@@ -853,7 +853,7 @@ void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.back() = i_rank * 8 + i_file;
 				if (rank && file)
 					attacked_squares[dest - RANK - 1] = true;
 				push_check_line(check_line);
@@ -885,7 +885,7 @@ void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.back() = i_rank * 8 + i_file;
 				if (rank < 7 && file)
 					attacked_squares[dest + RANK - 1] = true;
 				push_check_line(check_line);
@@ -917,7 +917,7 @@ void legal_move_generator::opponent_bishop_data(int i_rank, int i_file, int king
 			//if the line hits the king without obstruction, it is a check line. x_rays are unimportant
 			if (king_pos == dest) {
 				check_line = x_ray;
-				check_line.push_back(i_rank * 8 + i_file);
+				check_line.back() = i_rank * 8 + i_file;
 				if (rank < 7 && file < 7)
 					attacked_squares[dest + RANK + 1] = true;
 				push_check_line(check_line);

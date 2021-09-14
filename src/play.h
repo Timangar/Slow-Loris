@@ -4,6 +4,5 @@
 #include "tools.h"
 #include <thread>
 
-void render(chess_environment& env);
-void input(chess_environment& env, agent& agent);
+void input(chess_environment* env, agent& agent);
 void play();

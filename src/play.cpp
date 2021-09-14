@@ -1,22 +1,33 @@
 #include "chess_environment.h"
 #include "agent.h"
 #include "tools.h"
-#include <thread>
+#include <chrono>
+#include "play.h"
 
-void render(chess_environment& env)
+void input(chess_environment* env, agent& loris)
 {
-    while (!glfwWindowShouldClose(env.get_window()))
-        env.render();
-}
+    static int turn = WHITE;
+    static int color = WHITE;
+ auto begin = std::chrono::high_resolution_clock::now();
 
-void input(chess_environment& env, agent& agent)
-{
-    using namespace std::literals::chrono_literals;
-    while (!glfwWindowShouldClose(env.get_window()))
-    {
-        env.player_input();
-        std::this_thread::sleep_for(1s);
-        env.agent_input(agent.act(env.get_state()));
+    turn = env->get_state().turn;
+
+    if (turn == color)
+        env->player_input();
+
+    else {
+        loris.think_about(env->get_state());
+        auto begin = std::chrono::high_resolution_clock::now();
+        while (true) {
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> duration = end - begin;
+            if (3 <= duration.count()) {
+                env->agent_input(loris.act());
+                break;
+            }
+            else
+                env->render();
+        }
     }
 }
 
@@ -26,8 +37,7 @@ void play()
 
     chess_environment* env = new chess_environment;
     agent loris;
-    int turn = WHITE;
-    int color = WHITE;
+    
     while (!glfwWindowShouldClose(env->get_window()))
     {
         static bool print = true;
@@ -49,16 +59,8 @@ void play()
                 print = false;
             }
         }
-        else {
-            turn = env->get_state().turn;
-            if (turn == color)
-                //env->agent_input(loris.act(env->get_state()));
-                env->player_input();
-            else
-                //env->agent_input(loris.act(env->get_state()));
-                env->player_input();
-            //std::this_thread::sleep_for(0.1s);
-        }
+        else
+            input(env, loris);
         env->render();
     }
 }

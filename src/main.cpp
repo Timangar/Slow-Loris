@@ -3,5 +3,5 @@
 
 int main(void)
 {
-	perft();
+	play();
 }

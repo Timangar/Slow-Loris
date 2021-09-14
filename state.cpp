@@ -125,7 +125,7 @@ state::state(std::string fen)
 
 bool state::contains(move& m)
 {
-	for (move i : legal_moves)
+	for (const move& i : legal_moves)
 		if (i == m)
 			return true;
 	return false;

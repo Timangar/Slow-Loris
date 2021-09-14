@@ -1,32 +1,81 @@
 #include "agent.h"
 #include <math.h>
+#include <thread>
 #include <random>
+#include <Windows.h>
 
-std::string const chess_environment::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-agent::agent(std::string fen) : root(state(fen)) {}
+agent::agent(std::string fen, double c) : root(state(fen)), c(c), thinking(false), thinkers(0) {}
 
-void agent::think_start()
+
+void agent::think_about(state s)
 {
+    if (thinking)
+        return;
+
+    //construct new root
+    bool child_state = false;
+    for (node n : root.children()) {
+        if (n.current() == s) {
+            root = n;
+            child_state = true;
+            break;
+        }
+    }
+
+    if (!child_state)
+        root = node(s);
+    
+    //determine max depth and number of threads based on computer stats
+    unsigned n_threads = 1;
+
+    MEMORYSTATUSEX memory_status;
+    memory_status.dwLength = sizeof(memory_status);
+    GlobalMemoryStatusEx(&memory_status);
+
+    unsigned long long max_depth = memory_status.ullAvailPhys / 8 / sizeof(node) / n_threads;
+
+    //start threads here
+    thinking = true;
+
+    for (unsigned i = 0; i < n_threads; i++) {
+        std::thread worker(&agent::mcts, this, max_depth);
+        worker.detach();
+    }
 }
 
-void agent::think_stop()
+void agent::stop_thinking()
 {
+    if (!thinking)
+        return;
+
+    thinking = false;
+    while (thinkers)
+        continue;
+
+    return;
 }
 
 void agent::think_pause_for(int seconds)
 {
 }
 
-move agent::act(state s)
+move agent::act()
 {
-	if (s.terminal_state)
-		return move(0, 0);
-	std::default_random_engine randgen;
-	std::uniform_int_distribution<int> randdist(0, s.legal_moves.size() - 1);
+    if (thinking)
+        stop_thinking();
 
-	int action = randdist(randgen);
-	return s.legal_moves.at(action);
+    unsigned index = 0;
+    int highscore = 0;
+    for (unsigned i = 0; i < root.children().size(); i++) {
+        int score = root.children()[i].n();
+        if (highscore < score) {
+            highscore = score;
+            index = i;
+        }
+    }
+    return root.children()[index].action();
 }
 
 void agent::train()
@@ -36,12 +85,12 @@ void agent::train()
 double agent::UCB1(const node& child, int N)
 {
 	if (child.n())
-		return child.t() / (child.n() + child.o()) - c * sqrt(log(N) / (child.n() + child.o()));
+		return (double)child.t() / ((double)child.n() + (double)child.o()) - c * sqrt(log(N) / ((double)child.n() + (double)child.o()));
 	else
 		return (double)INFINITY;
 }
 
-unsigned agent::select(const node& parent)
+unsigned agent::select(node& parent)
 {
 	unsigned index = 0;
 	double highscore = double(-INFINITY);
@@ -108,15 +157,35 @@ double agent::mcts_step(node& Node)
     }
     
     //backpropagate
-    Node.increment_t(-evaluation * Node.color());
+    //the evaluation has to be flipped. a black node with white winning needs val -x, with black winning x and vice versa.
+    Node.increment_t(-evaluation * Node.color()); 
     Node.increment_n();
     Node.decrement_o();
     return evaluation;
 }
 
-double agent::eval(const node& Node)
+void agent::mcts(unsigned long long max_depth)
 {
-	return 0.0;
+    thinkers++;
+    while (max_depth > 0 && thinking) {
+        mcts_step(root);
+        max_depth--;
+    }
+    thinkers--;
+}
+
+double agent::eval(const node& Node) //return a positive value if white is winning, a negative value if black is winning
+{
+    if (Node.terminal())
+        return (double)Node.score() * 10000.0;
+
+    //define piece values
+    int values[7] = { 0, 0, 9, 3, 3, 5, 1 };
+    
+    int eval = 0;
+    for (piece p : Node.position())
+        eval += values[p.get_type()] * p.get_color();
+    return eval;
 }
 
 void agent::policy_predict()
