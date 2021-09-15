@@ -2,7 +2,7 @@
 #include <cassert>
 
 node::node(const node* parent, move action)
-	: _n(0), _t(0), _o(0), _action(action), _current(parent->_current)
+	: _n(0), _t(0), _o(0), _action(action), _current(parent->_current), _expanded(false)
 {
 	if (!action.castle &&
 		!parent->_current.position[action.destination].get_color() &&
@@ -13,15 +13,26 @@ node::node(const node* parent, move action)
 	_children.reserve(_current.legal_moves.size());
 }
 
-node::node(state s) : _n(0), _t(0), _o(0), _action(0, 0), _current(s) 
+node::node(state s) : _n(0), _t(0), _o(0), _action(0, 0), _current(s), _expanded(false)
 {
 	_children.reserve(_current.legal_moves.size());
 }
 
 void node::expand()
 {
-	for (move m : _current.legal_moves)
-		_children.emplace_back(this, m);
+	if (!_expanded) {
+		std::vector<node> intermediate;
+		intermediate.reserve(_current.legal_moves.size());
+		for (move m : _current.legal_moves)
+			intermediate.emplace_back(this, m);
+		_children = intermediate;
+		_expanded = true;
+	}
+}
+
+bool node::expanded() const
+{
+	return _expanded;
 }
 
 int node::n() const

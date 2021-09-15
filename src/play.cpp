@@ -16,7 +16,6 @@ void input(chess_environment* env, agent& loris)
         env->player_input();
 
     else {
-        loris.think_about(env->get_state());
         auto begin = std::chrono::high_resolution_clock::now();
         while (true) {
             auto end = std::chrono::high_resolution_clock::now();
@@ -37,7 +36,7 @@ void play()
 
     chess_environment* env = new chess_environment;
     agent loris;
-    
+    loris.think_about(env->get_state());
     while (!glfwWindowShouldClose(env->get_window()))
     {
         static bool print = true;

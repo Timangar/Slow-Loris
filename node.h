@@ -9,6 +9,8 @@ public:
 
 	void expand();
 
+	bool expanded() const;
+
 	int n() const;
 	int t() const;
 	int o() const;
@@ -39,6 +41,8 @@ private:
 	int _n;							//visit count
 	double _t;						//total value
 	int _o;							//active threads on node
+
+	bool _expanded;
 
 	move _action;					//the action that was taken to get to this state
 };

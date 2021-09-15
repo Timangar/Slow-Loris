@@ -3,6 +3,7 @@
 #include <thread>
 #include <random>
 #include <Windows.h>
+#include <mutex>
 
 std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -75,7 +76,10 @@ move agent::act()
             index = i;
         }
     }
-    return root.children()[index].action();
+
+    move ret = root.children()[index].action();
+    think_about(root.children()[index].current());
+    return ret;
 }
 
 void agent::train()
@@ -108,7 +112,7 @@ double agent::expand(node& Node)
 {
 	//for every legal move, we have to create a new node
 	Node.expand();
-	return eval(Node.children()[select(Node)]);
+	return mcts_step(Node.children()[select(Node)]);
 }
 
 double agent::mcts_step(node& Node)
@@ -118,30 +122,30 @@ double agent::mcts_step(node& Node)
 {
     Node.increment_o();
     int workers_as_entering = Node.o();
+    bool expanding = false;
     double evaluation;
 
+    //is this a terminal state?
+    if (Node.terminal())
+        evaluation = eval(Node);
+    //no:
+    else
     //is this a leaf node?
-    if (!Node.children().size()) 
-        //yes: has it been visited before ?
+    if (!Node.children().size())
+        //yes: is another thread currently running on this node?
     {
-        if (Node.n())
-            //yes: expand and evaluate best child
+        if (workers_as_entering >= 2)
+            //yes: has it been visited before?
         {
-            if (Node.terminal())                //check if terminal state and node cannot be expanded
-                return Node.score();
-            else
-                evaluation = expand(Node);
+            evaluation = expand(Node); //check if terminal state and node cannot be expanded
         }
-        else
-            //no: is another thread currently running on this node?
+        else 
+            //no: has it been visited before?
         {
-            if (workers_as_entering >= 2)
+            if (Node.n())
                 //yes: expand and evaluate best child
             {
-                if (Node.terminal())                //check if terminal state and node cannot be expanded
-                    return Node.score();
-                else
-                    evaluation = expand(Node);
+                evaluation = expand(Node); //check if terminal state and node cannot be expanded
             }
             else
                 //no: evaluate this node
@@ -151,11 +155,11 @@ double agent::mcts_step(node& Node)
         }
     }
     else
-        //no: pick the best child node to examine
+        //no (not a leaf node): pick the best child node to examine
     {
         evaluation = mcts_step(Node.children()[select(Node)]);
     }
-    
+
     //backpropagate
     //the evaluation has to be flipped. a black node with white winning needs val -x, with black winning x and vice versa.
     Node.increment_t(-evaluation * Node.color()); 
@@ -203,3 +207,49 @@ void agent::create_vnet()
 void agent::create_pnet()
 {
 }
+
+
+
+/*
+//is this a leaf node?
+    if (!Node.children().size())
+        //yes: has it been visited before ?
+    {
+        if (Node.n())
+            //yes: expand and evaluate best child (or
+        {
+            if (Node.terminal())                //check if terminal state and node cannot be expanded
+                return Node.score();
+            else
+                evaluation = expand(Node);
+        }
+        else
+            //no: is another thread currently running on this node?
+        {
+            if (workers_as_entering >= 2)
+                //yes: expand and evaluate best child
+            {
+                if (Node.terminal())                //check if terminal state and node cannot be expanded
+                    return Node.score();
+                evaluation = expand(Node);
+            }
+            else
+                //no: evaluate this node
+            {
+                evaluation = eval(Node);
+            }
+        }
+    }
+    else
+        //no: pick the best child node to examine
+    {
+        evaluation = mcts_step(Node.children()[select(Node)]);
+    }
+
+    //backpropagate
+    //the evaluation has to be flipped. a black node with white winning needs val -x, with black winning x and vice versa.
+    Node.increment_t(-evaluation * Node.color());
+    Node.increment_n();
+    Node.decrement_o();
+    return evaluation;
+*/
