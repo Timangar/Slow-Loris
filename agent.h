@@ -5,7 +5,7 @@
 class agent
 {
 public:
-	agent(std::string fen = start_fen, double c = 1.5);
+	agent(std::string fen = start_fen, double c = 3);
 
 	void think_about(state s);					//start to think continuously about the position
 	void stop_thinking();							//stop thinking about the position

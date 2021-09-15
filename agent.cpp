@@ -137,7 +137,7 @@ double agent::mcts_step(node& Node)
         if (workers_as_entering >= 2)
             //yes: has it been visited before?
         {
-            evaluation = expand(Node); //check if terminal state and node cannot be expanded
+            evaluation = (Node.expanded()) ? mcts_step(Node.children()[select(Node)]) : expand(Node); //check if terminal state and node cannot be expanded
         }
         else 
             //no: has it been visited before?
