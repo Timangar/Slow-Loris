@@ -21,7 +21,7 @@ void input(chess_environment* env, agent& loris)
         while (true) {
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> duration = end - begin;
-            if (3 <= duration.count()) {
+            if (5 <= duration.count()) {
                 env->agent_input(loris.act());
                 break;
             }

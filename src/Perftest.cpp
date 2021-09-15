@@ -12,9 +12,11 @@ int perf(chess_environment &env, int depth)
     if (env.get_state().terminal_state || !depth)
         return 1;
     //std::this_thread::sleep_for(0.01s);
-    for (const move& m : env.get_state().legal_moves)
+    for (unsigned i = 0; i < env.get_state().legal_moves.size(); i++)
     {
-        env.agent_input(m);
+        if (env.get_state().legal_moves[i].destination == -1)
+            break;
+        env.agent_input(env.get_state().legal_moves[i]);
         if (render)
             env.render();
         n += perf(env, depth -1);

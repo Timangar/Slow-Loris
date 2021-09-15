@@ -171,11 +171,6 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 	//get each piece
 	for (unsigned int i = 0; i < 64; i++)
 	{
-		if (legal_moves.size() > 100) {
-			tools tool;
-			//tool.log_state(s);
-		}
-		//get every allied piece
 		piece opponent;
 		if (s.position[i].get_color() == s.turn)
 			opponent = s.position[i];
@@ -212,7 +207,7 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 		}
 	}
 	//check for terminal state
-	if (!legal_moves.size()) {
+	if (legal_moves.empty()) {
 		s.terminal_state = true;
 		if (check)
 			s.score = s.turn * -1;

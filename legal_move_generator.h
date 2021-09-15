@@ -1,6 +1,7 @@
 #pragma once
 #include "state.h"
 #include "move_array.h"
+#include "legal_move_array.h"
 
 typedef class legal_move_generator
 {
@@ -36,6 +37,6 @@ protected:
 	std::array<move_array, 2> check_lines;	//the check lines connecting a piece to the king, including the piece origin
 	bool attacked_squares[64];						//all the squares the opponent attacks
 
-	std::vector<move> legal_moves;
+	legal_move_array legal_moves;
 } lmg;
 

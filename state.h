@@ -1,10 +1,10 @@
 #pragma once
-#include <vector>
 #include "move.h"
 #include <string>
 #include "piece.h"
 #include <unordered_map>
 #include <array>
+#include "legal_move_array.h"
 
 struct state
 {
@@ -18,7 +18,7 @@ struct state
 	bool operator%(const state& other) const;
 	
 	std::array<piece, 64> position; //an array representing the FEN board in terms of piece classes and "empty" pieces
-	std::vector<move> legal_moves;
+	legal_move_array legal_moves;
 
 	int en_passant;
 

@@ -20,8 +20,11 @@ node::node(state s) : _n(0), _t(0), _o(0), _action(0, 0), _current(s)
 
 void node::expand()
 {
-	for (move m : _current.legal_moves)
+	for (move m : _current.legal_moves.get_data()) {
+		if (m.destination == -1)
+			break;
 		_children.emplace_back(this, m);
+	}
 }
 
 int node::n() const

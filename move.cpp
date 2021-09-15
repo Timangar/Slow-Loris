@@ -1,5 +1,13 @@
 #include "move.h"
 #include <cassert>
+move::move()
+{
+	origin = -1;
+	destination = -1;
+	castle = 0;
+	en_passant = 0;
+	promotion = 0;
+}
 move::move(int origin, int destination, bool castle, bool en_passant, bool promotion)
 {
 	this->origin = origin;

@@ -99,6 +99,9 @@
     <ClInclude Include="node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="legal_move_array.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="chess_environment.cpp">
@@ -174,6 +177,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="legal_move_array.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
