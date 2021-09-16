@@ -7,7 +7,7 @@
 
 std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-agent::agent(std::string fen, double c) : root(state(fen)), c(c), thinking(false), thinkers(0) {}
+agent::agent(std::string fen, double c) : c(c), thinking(false), thinkers(0) { root = new node(state(fen)); }
 
 
 void agent::think_about(state s)
@@ -15,18 +15,8 @@ void agent::think_about(state s)
     if (thinking)
         return;
 
-    //construct new root
-    bool child_state = false;
-    for (node n : root.children()) {
-        if (n.current() == s) {
-            root = n;
-            child_state = true;
-            break;
-        }
-    }
-
-    if (!child_state)
-        root = node(s);
+    delete root;
+    root = new node(s);
     
     //determine max depth and number of threads based on computer stats
     unsigned n_threads = 1;
@@ -62,24 +52,26 @@ void agent::think_pause_for(int seconds)
 {
 }
 
-move agent::act()
+move agent::act(state s)
 {
-    if (thinking)
-        stop_thinking();
+    think_about(s);
+    
+    int thinking_time = 3;
+    std::this_thread::sleep_for(std::chrono::seconds(thinking_time));
+
+    stop_thinking();
 
     unsigned index = 0;
     int highscore = 0;
-    for (unsigned i = 0; i < root.children().size(); i++) {
-        int score = root.children()[i].n();
+    for (unsigned i = 0; i < root->children().size(); i++) {
+        int score = root->children()[i].n();
         if (highscore < score) {
             highscore = score;
             index = i;
         }
     }
-
-    move ret = root.children()[index].action();
-    think_about(root.children()[index].current());
-    return ret;
+   
+    return root->children()[index].action();;
 }
 
 void agent::train()
@@ -110,6 +102,7 @@ unsigned agent::select(node& parent)
 
 double agent::expand(node& Node)
 {
+    std::lock_guard<std::mutex> lock(expansion_lock);
 	//for every legal move, we have to create a new node
 	Node.expand();
 	return mcts_step(Node.children()[select(Node)]);
@@ -154,7 +147,7 @@ double agent::mcts_step(node& Node)
             }
         }
     }
-    else
+    else 
         //no (not a leaf node): pick the best child node to examine
     {
         evaluation = mcts_step(Node.children()[select(Node)]);
@@ -172,7 +165,7 @@ void agent::mcts(unsigned long long max_depth)
 {
     thinkers++;
     while (max_depth > 0 && thinking) {
-        mcts_step(root);
+        mcts_step(*root);
         max_depth--;
     }
     thinkers--;

@@ -1,5 +1,6 @@
 #pragma once
 #include "legal_move_generator.h"
+#include <mutex>
 
 class node
 {
@@ -41,6 +42,7 @@ private:
 	int _n;							//visit count
 	double _t;						//total value
 	int _o;							//active threads on node
+
 
 	bool _expanded;
 

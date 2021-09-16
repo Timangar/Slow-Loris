@@ -8,26 +8,14 @@ void input(chess_environment* env, agent& loris)
 {
     static int turn = WHITE;
     static int color = WHITE;
- auto begin = std::chrono::high_resolution_clock::now();
 
     turn = env->get_state().turn;
 
     if (turn == color)
         env->player_input();
 
-    else {
-        auto begin = std::chrono::high_resolution_clock::now();
-        while (true) {
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> duration = end - begin;
-            if (3 <= duration.count()) {
-                env->agent_input(loris.act());
-                break;
-            }
-            else
-                env->render();
-        }
-    }
+    else 
+        env->agent_input(loris.act(env->get_state()));
 }
 
 void play()
@@ -36,7 +24,6 @@ void play()
 
     chess_environment* env = new chess_environment;
     agent loris;
-    loris.think_about(env->get_state());
     while (!glfwWindowShouldClose(env->get_window()))
     {
         static bool print = true;
