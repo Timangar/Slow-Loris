@@ -46,6 +46,8 @@ private:
 	state _current;								//current state of this node
 	std::vector<state> _history;				//history leading to this node
 
+	//std::mutex lock;
+
 	std::unique_ptr<node[]> _children;			//leaf nodes
 	std::unique_ptr<node[]> children();
 
