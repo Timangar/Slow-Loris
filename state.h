@@ -9,6 +9,8 @@
 struct state
 {
 	state(std::string fen);
+	state();
+
 
 	bool contains(move& m);
 	std::array<piece, 64>* get_position();

@@ -8,6 +8,7 @@ legal_move_generator::legal_move_generator() : attacked_squares{ 0 } {}
 void legal_move_generator::gen(state& s, move m, const std::vector<state>& history, bool init)
 {
 	if (!init) {
+		init = true;
 		bool increment_fifty_move_count = true;
 		//make normal part of move
 		//-------------------------

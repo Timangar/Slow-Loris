@@ -1,16 +1,25 @@
 #pragma once
 #include "legal_move_generator.h"
-#include <mutex>
+#include <memory>
 
 class node
 {
 public:
+
 	node(const node* parent, move action);
 	node(state s);
+	node();
+
+	//node& operator=(const node& other);
+	
+	bool inherit(state s);				//absorb the branch of one of the child nodes, delete rest of tree, returns true if successful
+	bool inherit(unsigned index);		//inherit based on index, returns true if successful
 
 	void expand();
 
 	bool expanded() const;
+
+	node* get(int i);
 
 	int n() const;
 	int t() const;
@@ -20,6 +29,7 @@ public:
 	int score() const;					//1, 0 or -1 (white win, draw or black win)
 
 	const state& current() const;
+	const unsigned size() const;
 
 	std::array<piece, 64> position() const;
 	const move& action() const;
@@ -31,21 +41,20 @@ public:
 
 	int color() const;
 
-	std::vector<node>& children();
 
 private:
-	state _current;					//current state of this node
-	std::vector<state> _history;	//history leading to this node
+	state _current;								//current state of this node
+	std::vector<state> _history;				//history leading to this node
 
-	std::vector<node> _children;	//leaf nodes
+	std::unique_ptr<node[]> _children;			//leaf nodes
+	std::unique_ptr<node[]> children();
 
-	int _n;							//visit count
-	double _t;						//total value
-	int _o;							//active threads on node
+	bool _expanded = false;
+	unsigned _size = 0;
 
-
-	bool _expanded;
+	volatile int _n;							//visit count
+	volatile double _t;							//total value
+	volatile int _o;							//active threads on node
 
 	move _action;					//the action that was taken to get to this state
 };
-

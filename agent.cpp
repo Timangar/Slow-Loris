@@ -7,17 +7,14 @@
 
 std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-agent::agent(std::string fen, double c) : c(c), thinking(false), thinkers(0) { root = new node(state(fen)); }
+agent::agent(std::string fen, double c) : c(c), thinking(false), thinkers(0), root(new node) {}
 
 
-void agent::think_about(state s)
+void agent::think()
 {
     if (thinking)
         return;
 
-    delete root;
-    root = new node(s);
-    
     //determine max depth and number of threads based on computer stats
     unsigned n_threads = 1;
 
@@ -26,7 +23,6 @@ void agent::think_about(state s)
     GlobalMemoryStatusEx(&memory_status);
 
     unsigned long long max_depth = memory_status.ullAvailPhys / 8 / sizeof(node) / n_threads;
-
     //start threads here
     thinking = true;
 
@@ -45,6 +41,7 @@ void agent::stop_thinking()
     while (thinkers)
         continue;
 
+
     return;
 }
 
@@ -54,44 +51,54 @@ void agent::think_pause_for(int seconds)
 
 move agent::act(state s)
 {
-    think_about(s);
+    //check if state is already in calculation
+    bool reassign = !root->inherit(s);
+    if (reassign) {
+        root.reset(new node(s));
+    }
+
+    think();
     
-    int thinking_time = 3;
+    int thinking_time = 1 + root->size() / 10;
     std::this_thread::sleep_for(std::chrono::seconds(thinking_time));
 
     stop_thinking();
 
     unsigned index = 0;
     int highscore = 0;
-    for (unsigned i = 0; i < root->children().size(); i++) {
-        int score = root->children()[i].n();
+    for (unsigned i = 0; i < root->size(); i++) {
+        int score = root->get(i)->n();
         if (highscore < score) {
             highscore = score;
             index = i;
         }
     }
    
-    return root->children()[index].action();;
+    //make root the chosen child
+    move action = root->get(index)->action();
+    root->inherit(index);
+
+    return action;
 }
 
 void agent::train()
 {
 }
 
-double agent::UCB1(const node& child, int N)
+double agent::UCB1(const node* child, int N)
 {
-	if (child.n())
-		return (double)child.t() / ((double)child.n() + (double)child.o()) - c * sqrt(log(N) / ((double)child.n() + (double)child.o()));
+	if (child->n())
+		return (double)child->t() / ((double)child->n() + (double)child->o()) - c * sqrt(log(N) / ((double)child->n() + (double)child->o()));
 	else
 		return (double)INFINITY;
 }
 
-unsigned agent::select(node& parent)
+unsigned agent::select(node* parent)
 {
 	unsigned index = 0;
 	double highscore = double(-INFINITY);
-	for (unsigned i = 0; i < parent.children().size(); i++) {
-		double score = UCB1(parent.children()[i], parent.n());
+	for (unsigned i = 0; i < parent->size(); i++) {
+		double score = UCB1(parent->get(i), parent->n());
 		if (highscore < score) {
 			highscore = score;
 			index = i;
@@ -100,87 +107,78 @@ unsigned agent::select(node& parent)
 	return index;
 }
 
-double agent::expand(node& Node)
+double agent::expand(node* Node)
 {
-    std::lock_guard<std::mutex> lock(expansion_lock);
 	//for every legal move, we have to create a new node
-	Node.expand();
-	return mcts_step(Node.children()[select(Node)]);
+	Node->expand();
+	return mcts_step(Node->get(select(Node)));
 }
 
-double agent::mcts_step(node& Node)
+double agent::mcts_step(node* Node)
 //expand the tree and its evaluation by one new evaluated node. returns eval of an examined child node
 //To tell other threads in multithreaded MCTS that this node is already being evaluated, o has to be incremented 
 //in the forward pass but decremented in the backprop
 {
-    Node.increment_o();
-    int workers_as_entering = Node.o();
+    Node->increment_o();
     bool expanding = false;
     double evaluation;
 
     //is this a terminal state?
-    if (Node.terminal())
+    if (Node->terminal())
         evaluation = eval(Node);
     //no:
     else
     //is this a leaf node?
-    if (!Node.children().size())
-        //yes: is another thread currently running on this node?
+    if (!Node->expanded())
     {
-        if (workers_as_entering >= 2)
-            //yes: has it been visited before?
+        //has it been visited before?
+        if (Node->n())
+            //yes: expand and evaluate best child
         {
-            evaluation = (Node.expanded()) ? mcts_step(Node.children()[select(Node)]) : expand(Node); //check if terminal state and node cannot be expanded
+            evaluation = expand(Node); //check if terminal state and node cannot be expanded
         }
-        else 
-            //no: has it been visited before?
+        else
+            //no: evaluate this node
         {
-            if (Node.n())
-                //yes: expand and evaluate best child
-            {
-                evaluation = expand(Node); //check if terminal state and node cannot be expanded
-            }
-            else
-                //no: evaluate this node
-            {
-                evaluation = eval(Node);
-            }
+            evaluation = eval(Node);
         }
     }
     else 
         //no (not a leaf node): pick the best child node to examine
     {
-        evaluation = mcts_step(Node.children()[select(Node)]);
+        evaluation = mcts_step(Node->get(select(Node)));
     }
 
     //backpropagate
     //the evaluation has to be flipped. a black node with white winning needs val -x, with black winning x and vice versa.
-    Node.increment_t(-evaluation * Node.color()); 
-    Node.increment_n();
-    Node.decrement_o();
+    Node->increment_t(-evaluation * Node->color()); 
+    Node->increment_n();
+    Node->decrement_o();
     return evaluation;
 }
 
 void agent::mcts(unsigned long long max_depth)
 {
+    unsigned long long dep = max_depth;
     thinkers++;
-    while (max_depth > 0 && thinking) {
-        mcts_step(*root);
-        max_depth--;
+    while (dep > 0 && thinking) {
+        mcts_step(root.get());
+        dep--;
     }
     thinkers--;
+    //std::cout << (max_depth - dep) << std::endl;
 }
 
-double agent::eval(const node& Node) //return a positive value if white is winning, a negative value if black is winning
+double agent::eval(const node* Node) //return a positive value if white is winning, a negative value if black is winning
 {
-    if (Node.terminal())
-        return (double)Node.score() * 10000.0;
+    if (Node->terminal())
+        return (double)Node->score() * 10000.0;
 
     //define piece values
     int values[7] = { 0, 0, 9, 3, 3, 5, 1 };
     
     int eval = 0;
-    for (piece p : Node.position())
+    for (piece p : Node->position())
         eval += values[p.get_type()] * p.get_color();
     return eval;
 }

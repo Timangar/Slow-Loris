@@ -123,6 +123,22 @@ state::state(std::string fen)
 	score = 0;
 }
 
+state::state()
+{
+	en_passant = 0;
+	repetition_count = 0;
+	fifty_move_count = 0;
+	terminal_state = 0;
+	score = 0;
+	turn = 0;
+	castling_b_k = 0;
+	castling_b_q = 0;
+	castling_w_k = 0;
+	castling_w_q = 0;
+	pos_wk = 0;
+	pos_bk = 0;
+}
+
 bool state::contains(move& m)
 {
 	for (const move& i : legal_moves)

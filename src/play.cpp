@@ -10,11 +10,10 @@ void input(chess_environment* env, agent& loris)
     static int color = WHITE;
 
     turn = env->get_state().turn;
-
     if (turn == color)
         env->player_input();
 
-    else 
+    else
         env->agent_input(loris.act(env->get_state()));
 }
 

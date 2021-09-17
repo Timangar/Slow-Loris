@@ -2,7 +2,7 @@
 #include <cassert>
 
 node::node(const node* parent, move action)
-	: _n(0), _t(0), _o(0), _action(action), _current(parent->_current), _expanded(false)
+	: _n(0), _t(0), _o(0), _action(action), _current(parent->_current)
 {
 	if (!action.castle &&
 		!parent->_current.position[action.destination].get_color() &&
@@ -10,22 +10,54 @@ node::node(const node* parent, move action)
 		_history = parent->_history;
 	lmg gen;
 	gen.gen(_current, action, _history);
-	_children.reserve(_current.legal_moves.size());
+	_size = _current.legal_moves.size();
 }
 
-node::node(state s) : _n(0), _t(0), _o(0), _action(0, 0), _current(s), _expanded(false)
+node::node(state s) : _n(0), _t(0), _o(0), _action(0, 0), _current(s) { _size = _current.legal_moves.size(); }
+node::node() : _n(0), _t(0), _o(0), _action(0, 0), _current() {}
+
+bool node::inherit(state s)
 {
-	_children.reserve(_current.legal_moves.size());
+	bool ret = false;
+	if (_expanded)
+	for (unsigned i = 0; i < _size; i++) {
+		if (_children[i].current() == s) {
+			ret = inherit(i);
+			break;
+		}
+	}
+	return ret;
+}
+
+bool node::inherit(unsigned index)
+{	
+	bool ret = false;
+	if (index < _size)
+	{
+		_action = _children[index]._action;
+		_size = _children[index]._size;
+		_current = _children[index]._current;
+		_expanded = _children[index]._expanded;
+		_history = _children[index]._history;
+		_n = _children[index]._n;
+		_t = _children[index]._t;
+		_o = _children[index]._o;
+
+		_children = _children[index].children();
+		if (_children)
+			ret = true;
+	}
+	return ret;
 }
 
 void node::expand()
 {
-	if (!_expanded) {
-		std::vector<node> intermediate;
-		intermediate.reserve(_current.legal_moves.size());
-		for (move m : _current.legal_moves)
-			intermediate.emplace_back(this, m);
-		_children = intermediate;
+	if (_children.get() == nullptr && _size > 0) {
+		node* intermediate = new node[_size];
+		for (unsigned i = 0; i < _size; i++) {
+			intermediate[i] = { this, _current.legal_moves[i] };
+		}
+		_children.reset(intermediate);
 		_expanded = true;
 	}
 }
@@ -33,6 +65,13 @@ void node::expand()
 bool node::expanded() const
 {
 	return _expanded;
+}
+
+node* node::get(int i)
+{
+	if (i >= _current.legal_moves.size() || _children.get() == nullptr)
+		__debugbreak();
+	return _children.get() + i;
 }
 
 int node::n() const
@@ -64,6 +103,13 @@ int node::score() const
 const state& node::current() const
 {
 	return _current;
+}
+
+const unsigned node::size() const
+{
+	if (!_expanded)
+		return 0;
+	return _size;
 }
 
 std::array<piece, 64> node::position() const
@@ -102,7 +148,8 @@ int node::color() const
 	return _current.turn;
 }
 
-std::vector<node>& node::children()
+std::unique_ptr<node[]> node::children()
 {
-	return _children;
+	std::unique_ptr<node[]> p = std::move(_children);
+	return p;
 }
