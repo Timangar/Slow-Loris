@@ -16,13 +16,13 @@ void agent::think()
         return;
 
     //determine max depth and number of threads based on computer stats
-    unsigned n_threads = 2;
+    unsigned n_threads = 1;
 
     MEMORYSTATUSEX memory_status;
     memory_status.dwLength = sizeof(memory_status);
     GlobalMemoryStatusEx(&memory_status);
 
-    unsigned long long max_depth = memory_status.ullAvailPhys / 8 / sizeof(node) / n_threads;
+    unsigned long long max_depth = memory_status.ullAvailPhys / 16 / sizeof(node) / n_threads;
     //start threads here
     thinking = true;
 
