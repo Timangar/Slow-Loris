@@ -1,11 +1,12 @@
 #pragma once
 #include "legal_move_generator.h"
 #include <memory>
+#include <mutex>
 
 class node
 {
 public:
-
+	node& operator=(const node& other);
 	node(const node* parent, move action);
 	node(state s);
 	node();
@@ -43,6 +44,7 @@ public:
 
 
 private:
+	std::mutex lock;
 	state _current;								//current state of this node
 	std::vector<state> _history;				//history leading to this node
 

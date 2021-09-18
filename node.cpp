@@ -1,6 +1,21 @@
 #include "node.h"
 #include <cassert>
 
+node& node::operator=(const node& other)
+{
+	_action = other._action;
+	_size = other._size;
+	_current = other._current;
+	_expanded = other._expanded;
+	_history = other._history;
+	_n = other._n;
+	_t = other._t;
+	_o = other._o;
+
+	//_children = other.children();
+	return *this;
+}
+
 node::node(const node* parent, move action)
 	: _n(0), _t(0), _o(0), _action(action), _current(parent->_current)
 {
@@ -44,20 +59,24 @@ bool node::inherit(unsigned index)
 		_o = _children[index]._o;
 
 		_children = _children[index].children();
+
 		if (_children)
 			ret = true;
 	}
 	return ret;
 }
 
+thread_local node* volatile intermediate_node_expansion;
+
 void node::expand()
 {
+	std::lock_guard<std::mutex> l(lock);
 	if (_children.get() == nullptr && _size > 0) {
-		node* intermediate = new node[_size];
+		intermediate_node_expansion = new node[_size];
 		for (unsigned i = 0; i < _size; i++) {
-			intermediate[i] = { this, _current.legal_moves[i] };
+			intermediate_node_expansion[i] = { this, _current.legal_moves[i] };
 		}
-		_children.reset(intermediate);
+		_children.reset(intermediate_node_expansion);
 		_expanded = true;
 	}
 }

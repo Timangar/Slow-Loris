@@ -16,7 +16,7 @@ void agent::think()
         return;
 
     //determine max depth and number of threads based on computer stats
-    unsigned n_threads = 1;
+    unsigned n_threads = 2;
 
     MEMORYSTATUSEX memory_status;
     memory_status.dwLength = sizeof(memory_status);
