@@ -5,7 +5,7 @@
 class agent
 {
 public:
-	agent(std::string fen = start_fen, double c = 0.01);
+	agent(std::string fen = start_fen, double c = 0.1);
 
 	move act(state s);									//act on thoughts
 	void train();								//train based on training data

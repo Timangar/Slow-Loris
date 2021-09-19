@@ -66,17 +66,15 @@ bool node::inherit(unsigned index)
 	return ret;
 }
 
-thread_local node* volatile intermediate_node_expansion;
-
 void node::expand()
 {
 	std::lock_guard<std::mutex> l(lock);
 	if (_children.get() == nullptr && _size > 0) {
-		intermediate_node_expansion = new node[_size];
+		node* volatile intermediate = new node[_size];
 		for (unsigned i = 0; i < _size; i++) {
-			intermediate_node_expansion[i] = { this, _current.legal_moves[i] };
+			intermediate[i] = { this, _current.legal_moves[i] };
 		}
-		_children.reset(intermediate_node_expansion);
+		_children.reset(intermediate);
 		_expanded = true;
 	}
 }
@@ -88,7 +86,7 @@ bool node::expanded() const
 
 node* node::get(int i)
 {
-	if (i >= _current.legal_moves.size() || _children.get() == nullptr)
+	if (i >= _size || _children == nullptr)
 		__debugbreak();
 	return _children.get() + i;
 }
