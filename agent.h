@@ -26,9 +26,7 @@ private:
 	double eval(const node* Node);				//evaluate a node
 	void policy_predict();						//predict the probability distribution across children of a node
 
-	void think();					//start to think continuously about the position
-	void stop_thinking();							//stop thinking about the position
-	void think_pause_for(int seconds);			//pause the thinking process
+	void think();								//think about the position
 
 	void load_weights();						//load weights for neural networks from file
 	void create_vnet();							//create hyperparameters for value network

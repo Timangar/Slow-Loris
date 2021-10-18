@@ -16,7 +16,7 @@ void agent::think()
         return;
 
     //determine max depth and number of threads based on computer stats
-    unsigned n_threads = 4;
+    const unsigned n_threads = 4;
 
     MEMORYSTATUSEX memory_status;
     memory_status.dwLength = sizeof(memory_status);
@@ -24,29 +24,15 @@ void agent::think()
 
     unsigned long long max_depth = memory_status.ullAvailPhys / 8 / sizeof(node) / n_threads;
     //start threads here
-    thinking = true;
+
+    std::thread workers[n_threads];
 
     for (unsigned i = 0; i < n_threads; i++) {
-        std::thread worker(&agent::mcts, this, max_depth);
-        worker.detach();
+        workers[i] = std::thread(&agent::mcts, this, max_depth);
     }
-}
-
-void agent::stop_thinking()
-{
-    if (!thinking)
-        return;
-
-    thinking = false;
-    while (thinkers)
-        continue;
-
-
-    return;
-}
-
-void agent::think_pause_for(int seconds)
-{
+    for (unsigned i = 0; i < n_threads; i++) {
+        workers[i].join();
+    }
 }
 
 move agent::act(state s)
@@ -58,11 +44,6 @@ move agent::act(state s)
     }
 
     think();
-    
-    int thinking_time = 1 + root->size() / 10;
-    std::this_thread::sleep_for(std::chrono::seconds(thinking_time));
-
-    stop_thinking();
 
     unsigned index = 0;
     int highscore = 0;
@@ -159,14 +140,18 @@ double agent::mcts_step(node* Node)
 
 void agent::mcts(unsigned long long max_depth)
 {
+    float thinking_time = 1 + (float)root->size() / 10;
     unsigned long long dep = max_depth;
-    thinkers++;
-    while (dep > 0 && thinking) {
+    auto begin = std::chrono::high_resolution_clock::now();
+    thread_local auto end = begin;
+    thread_local std::chrono::duration<float> duration = end - begin;
+
+    while (dep > 0 && duration.count() < thinking_time) {
         mcts_step(root.get());
         dep--;
+        end = std::chrono::high_resolution_clock::now();
+        duration = end - begin;
     }
-    thinkers--;
-    //std::cout << (max_depth - dep) << std::endl;
 }
 
 double agent::eval(const node* Node) //return a positive value if white is winning, a negative value if black is winning
