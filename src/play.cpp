@@ -14,8 +14,7 @@ void input(chess_environment* env, agent& loris)
         env->player_input();
         //env->agent_input(loris.act(env->get_state()));
     else
-        env->player_input();
-        //env->agent_input(loris.act(env->get_state()));
+        env->agent_input(loris.act(env->get_state()));
 }
 
 void render(chess_environment* env)

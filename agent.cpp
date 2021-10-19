@@ -7,14 +7,12 @@
 
 std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-agent::agent(std::string fen, double c) : c(c), thinking(false), thinkers(0), root(new node) {}
+agent::agent(std::string fen, double c)
+    : c(c), root(new node), adam(vn.parameters()) {}
 
 
 void agent::think()
 {
-    if (thinking)
-        return;
-
     //determine max depth and number of threads based on computer stats
     const unsigned n_threads = 4;
 
@@ -62,8 +60,17 @@ move agent::act(state s)
     return action;
 }
 
-void agent::train()
+void agent::train(std::vector<state> input, int target)
 {
+
+    adam.zero_grad();
+    torch::Tensor out = vn();
+    std::cout << out << std::endl;
+    torch::Tensor target = torch::ones({ 1 });
+
+    torch::Tensor loss = torch::mse_loss(out, );
+    loss.backward();
+    adam.step();
 }
 
 double agent::UCB1(const node* child, int N)
@@ -156,16 +163,12 @@ void agent::mcts(unsigned long long max_depth)
 
 double agent::eval(const node* Node) //return a positive value if white is winning, a negative value if black is winning
 {
+    //return terminal state value if available
     if (Node->terminal())
-        return (double)Node->score() * 10000.0;
+        return (double)Node->score();
 
-    //define piece values
-    int values[7] = { 0, 0, 9, 3, 3, 5, 1 };
-    
-    int eval = 0;
-    for (piece p : Node->position())
-        eval += values[p.get_type()] * p.get_color();
-    return eval;
+    //return neural net eval
+    return vn(Node->current()).item<double>();
 }
 
 void agent::policy_predict()
@@ -175,16 +178,6 @@ void agent::policy_predict()
 void agent::load_weights()
 {
 }
-
-void agent::create_vnet()
-{
-}
-
-void agent::create_pnet()
-{
-}
-
-
 
 /*
 //is this a leaf node?
