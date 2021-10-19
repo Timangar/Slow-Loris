@@ -48,11 +48,11 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 			s.fifty_move_count = 0;
 		//threefold repetition
 		if (history.size() > 4) {
-			for (unsigned int i = 4; i <= s.fifty_move_count; i += 2) {
+			for (int i = 4; i <= s.fifty_move_count; i += 2) {
 				if (history[(history.size() - i)] == s)
 					s.repetition_count = history[history.size() - 1].repetition_count + 1;
 			}
-			if (s.repetition_count >= 3) {
+			if (s.repetition_count >= 4) {
 				s.terminal_state = true;
 				s.score = 0;
 			}
@@ -183,14 +183,14 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 		else
 			continue;
 
-		int i_rank = floor(i / 8);
+		int i_rank = (int)floor(i / 8);
 		int i_file = i - i_rank * 8;
 
 		//treat every piece differently
 		switch (opponent.get_type())
 		{
 		case 1:
-			king_moves(i_rank, i_file, s.turn, s.position, ck, cq);
+			king_moves(i_rank, i_file, s.turn, s.position, ck, cq, check);
 			break;
 		case 2:
 			bishop_moves(i_rank, i_file, s.turn, s.position, check);
@@ -237,7 +237,7 @@ void legal_move_generator::gen_opponent_data(int king_pos, int opponent_color, c
 		else
 			continue;
 
-		int i_rank = floor(i / 8);
+		int i_rank = (int)floor(i / 8);
 		int i_file = i - i_rank * 8;
 
 		//treat every piece differently
@@ -274,7 +274,7 @@ void legal_move_generator::gen_opponent_data(int king_pos, int opponent_color, c
 		if (v.empty())
 			continue;
 		int obst_count = -1;
-		for (int j = 0; j < v.get_size(); j++)
+		for (unsigned j = 0; j < v.get_size(); j++)
 			if (position[v.get_data()[j]].get_color())
 				obst_count++;
 		if (obst_count == 1)
@@ -302,7 +302,7 @@ void legal_move_generator::gen_opponent_data(int king_pos, int opponent_color, c
 				int same_color_count = -1;	//exactly one of them has to have the same color as the x_ray piece
 				if (floor(v.back() / 8) != ep_rank)
 					continue;
-				for (int j = 0; j < v.get_size(); j++) {
+				for (unsigned j = 0; j < v.get_size(); j++) {
 					if (position[v.get_data()[j]].get_color()) {
 						obst_count++;
 						if (position[v.get_data()[j]].get_type() == 6)
@@ -362,7 +362,8 @@ int legal_move_generator::get_pin_line(int i_pos)
 	return -1;
 }
 
-void legal_move_generator::king_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& pos, bool ck, bool cq)
+void legal_move_generator::king_moves(int i_rank, int i_file, int color,
+	const std::array<piece, 64>& pos, bool ck, bool cq, bool check)
 {
 	int i = i_rank * RANK + i_file;
 	if (i_rank && !attacked_squares[i - RANK] && pos[i - RANK].get_color() != color)
@@ -386,19 +387,22 @@ void legal_move_generator::king_moves(int i_rank, int i_file, int color, const s
 	int rank = 0;
 	if (color == WHITE)
 		rank = 7;
-	if (ck)
+	if (!check) 
 	{
-		if (!attacked_squares[rank * RANK + 5])
-			if (!attacked_squares[rank * RANK + 6])
-				if (!pos[rank * RANK + 5].get_color())
-					if (!pos[rank * RANK + 6].get_color())
-						legal_moves.push_back({ i, rank * RANK + 6, true });
-	}
-	if (cq)
-	{
-		if (!attacked_squares[rank * RANK + 2] && !attacked_squares[rank * RANK + 3]
-			&& !pos[rank * RANK + 2].get_color() && !pos[rank * RANK + 3].get_color())
-			legal_moves.push_back({ i, rank * RANK + 2, true });
+		if (ck)
+		{
+			if (!attacked_squares[rank * RANK + 5])
+				if (!attacked_squares[rank * RANK + 6])
+					if (!pos[rank * RANK + 5].get_color())
+						if (!pos[rank * RANK + 6].get_color())
+							legal_moves.push_back({ i, rank * RANK + 6, true });
+		}
+		if (cq)
+		{
+			if (!attacked_squares[rank * RANK + 2] && !attacked_squares[rank * RANK + 3]
+				&& !pos[rank * RANK + 2].get_color() && !pos[rank * RANK + 3].get_color())
+				legal_moves.push_back({ i, rank * RANK + 2, true });
+		}
 	}
 }
 
@@ -693,7 +697,7 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 			if (king_pos == dest) {
 				check_line = x_ray;
 				check_line.back() = i_rank * 8 + i_file;
-				if (rank);
+				if (rank)
 					attacked_squares[dest - RANK] = true; //king can't escape backwards
 				push_check_line(check_line);
 				break;

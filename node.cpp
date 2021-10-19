@@ -26,10 +26,17 @@ node::node(const node* parent, move action)
 	lmg gen;
 	gen.gen(_current, action, _history);
 	_size = _current.legal_moves.size();
+	//delete gen;
+	//std::cout << "node created" << std::endl;
 }
 
 node::node(state s) : _n(0), _t(0), _o(0), _action(0, 0), _current(s) { _size = _current.legal_moves.size(); }
 node::node() : _n(0), _t(0), _o(0), _action(0, 0), _current() {}
+
+node::~node()
+{
+	//std::cout << "node is deleted" << std::endl;
+}
 
 bool node::inherit(state s)
 {
@@ -70,7 +77,7 @@ void node::expand()
 {
 	std::lock_guard<std::mutex> l(lock);
 	if (_children.get() == nullptr && _size > 0) {
-		node* volatile intermediate = new node[_size];
+		node* intermediate = new node[_size];
 		for (unsigned i = 0; i < _size; i++) {
 			intermediate[i] = { this, _current.legal_moves[i] };
 		}
@@ -142,21 +149,25 @@ const move& node::action() const
 
 void node::increment_n()
 {
+	std::lock_guard<std::mutex> l(lock);
 	_n++;
 }
 
 void node::increment_t(double value)
 {
+	std::lock_guard<std::mutex> l(lock);
 	_t += value;
 }
 
 void node::increment_o()
 {
+	std::lock_guard<std::mutex> l(lock);
 	_o++;
 }
 
 void node::decrement_o()
 {
+	std::lock_guard<std::mutex> l(lock);
 	_o--;
 }
 

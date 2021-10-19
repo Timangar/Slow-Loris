@@ -10,6 +10,7 @@ public:
 	node(const node* parent, move action);
 	node(state s);
 	node();
+	~node();
 
 	//node& operator=(const node& other);
 	
@@ -56,9 +57,9 @@ private:
 	bool _expanded = false;
 	unsigned _size = 0;
 
-	volatile int _n;							//visit count
-	volatile double _t;							//total value
-	volatile int _o;							//active threads on node
+	int _n;										//visit count
+	double _t;									//total value
+	int _o;										//active threads on node
 
-	move _action;					//the action that was taken to get to this state
+	move _action;								//the action that was taken to get to this state
 };
