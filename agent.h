@@ -6,17 +6,22 @@
 class agent
 {
 public:
-	agent(std::string fen = start_fen, double c = 0.1);
+	agent(bool load = false, double c = 0.1, std::string fen = start_fen);
+	~agent();
 
 	move act(state s);																//act on thoughts
-	void train(std::vector<state> input, int target);								//train based on training data
+	void train(int target);								//train based on training data
+	move train_act(state s, float epsilon);
 
 	static std::string const start_fen;			//starting position as fen string
 private:
 	std::unique_ptr<node> root;					//root of the tree
 	double c;									//exploration variable
 	valnet vn;									//the value net
-	torch::optim::Adam adam;				//the optimizer
+	torch::optim::Adam* adam;					//the optimizer
+	torch::Device device;						//the device that handles machine learning
+
+	std::vector<torch::Tensor> predictions;
 
 	double UCB1(const node* child, int N);		//calculate confidence of a single node
 	unsigned select(node* parent);				//return index of most confident child with respect to its parent

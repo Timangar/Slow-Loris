@@ -36,18 +36,21 @@ void chess_environment::reset()
 {
 	history.clear();
 	current_state = state(start_fen);
+    gen.gen(current_state, { 0,0 }, history, true);
 }
 
 void chess_environment::set(const state& state) //TODO: test the copy constructor
 {
 	reset();
 	current_state = state;
+    gen.gen(current_state, { 0,0 }, history, true);
 }
 
 void chess_environment::set(std::string fen)
 {
 	reset();
 	current_state = state(fen);
+    gen.gen(current_state, { 0,0 }, history, true);
 }
 
 void chess_environment::unmake_move()

@@ -6,3 +6,4 @@
 
 void input(chess_environment* env, agent& agent);
 void play();
+void train(int epochs, int render_intervall, float esilon = 0.5f, float decay = 0.999f);

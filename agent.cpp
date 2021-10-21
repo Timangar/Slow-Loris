@@ -7,9 +7,19 @@
 
 std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-agent::agent(std::string fen, double c)
-    : c(c), root(new node), adam(vn.parameters()) {}
+agent::agent(bool load, double c, std::string fen)
+    : c(c), root(new node), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU) {
+    if (load) {
+        torch::load(vn, "valnet.pt");
+    }
+    vn->to(device);
+    adam = new torch::optim::Adam(vn->parameters());
+}
 
+agent::~agent()
+{
+    delete adam;
+}
 
 void agent::think()
 {
@@ -39,7 +49,11 @@ move agent::act(state s)
     bool reassign = !root->inherit(s);
     if (reassign) {
         root.reset(new node(s));
+        root->expand();
     }
+
+    //evaluate and append to predictions
+    predictions.push_back(vn->forward(root->current()));
 
     think();
 
@@ -57,20 +71,86 @@ move agent::act(state s)
     move action = root->get(index)->action();
     root->inherit(index);
 
+    //evaluate and append to predictions
+    predictions.push_back(vn->forward(root->current()));
+
     return action;
 }
 
-void agent::train(std::vector<state> input, int target)
+void agent::train(int target)
 {
+    //stack the recorded predictions into batch
+    torch::Tensor x = torch::stack(predictions);
+    x.to(device);
+    x = x.view(predictions.size());
 
-    adam.zero_grad();
-    torch::Tensor out = vn();
-    std::cout << out << std::endl;
-    torch::Tensor target = torch::ones({ 1 });
+    //generate target batch from score
+    torch::Tensor y = torch::ones({ (long long)predictions.size() }, device);
+    y *= target;
 
-    torch::Tensor loss = torch::mse_loss(out, );
+    //train using mean squared error
+    torch::Tensor loss = torch::mse_loss(x, y), device;
     loss.backward();
-    adam.step();
+    adam->step();
+
+    //reset everything
+    adam->zero_grad();
+    predictions.clear();
+
+    //save the parameters
+    torch::save(vn, "valnet.pt");
+}
+
+move agent::train_act(state s, float epsilon)
+{
+    //this function replaces "act" during training and involves making random moves. 
+    //as it is used exclusively in self play, the reassignment in the end is deleted
+
+    //check if state is already in calculation
+    bool reassign = !root->inherit(s);
+    if (reassign) {
+        root.reset(new node(s));
+        root->expand();
+    }
+
+    //the index of the move which will be chosen
+    unsigned index = 0;
+
+    //evaluate and append to predictions
+    predictions.push_back(vn->forward(root->current()));
+
+    //act randomly, if epsilon is hit
+    std::default_random_engine randeng;
+    auto now = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now());
+    auto duration = now.time_since_epoch();
+    randeng.seed(duration.count());
+    std::uniform_int_distribution<int> epsilon_dist(0, 100);
+    epsilon *= 100;
+
+    int e1 = epsilon_dist(randeng);
+
+    if (e1 < epsilon) {
+        if (!root->current().legal_moves.size())
+            __debugbreak;
+        std::uniform_int_distribution<int> dist(0, root->current().legal_moves.size() - 1);
+
+        index = dist(randeng);
+    }
+
+    else {
+        think();
+
+        int highscore = 0;
+        for (unsigned i = 0; i < root->size(); i++) {
+            int score = root->get(i)->n();
+            if (highscore < score) {
+                highscore = score;
+                index = i;
+            }
+        }
+    }
+
+    return root->get(index)->action();
 }
 
 double agent::UCB1(const node* child, int N)
@@ -147,18 +227,19 @@ double agent::mcts_step(node* Node)
 
 void agent::mcts(unsigned long long max_depth)
 {
-    float thinking_time = 1 + (float)root->size() / 10;
-    unsigned long long dep = max_depth;
+    float thinking_time = (float)root->size() / 20;
+    unsigned long long depth = 0;
     auto begin = std::chrono::high_resolution_clock::now();
     thread_local auto end = begin;
     thread_local std::chrono::duration<float> duration = end - begin;
 
-    while (dep > 0 && duration.count() < thinking_time) {
+    while (depth < max_depth && duration.count() < thinking_time) {
         mcts_step(root.get());
-        dep--;
         end = std::chrono::high_resolution_clock::now();
         duration = end - begin;
+        depth++;
     }
+    //std::cout << "search depth: " << depth << std::endl;
 }
 
 double agent::eval(const node* Node) //return a positive value if white is winning, a negative value if black is winning
@@ -167,15 +248,14 @@ double agent::eval(const node* Node) //return a positive value if white is winni
     if (Node->terminal())
         return (double)Node->score();
 
+    //predict and convert to double
+    double returnval = vn->forward(Node->current()).item<double>();
+
     //return neural net eval
-    return vn(Node->current()).item<double>();
+    return returnval;
 }
 
 void agent::policy_predict()
-{
-}
-
-void agent::load_weights()
 {
 }
 
