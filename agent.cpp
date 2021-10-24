@@ -12,7 +12,12 @@ agent::agent(bool load, double c, std::string fen)
     if (load) {
         torch::load(vn, "valnet.pt");
     }
+    else
+    {
+        vn = std::make_shared<valnetImpl>();
+    }
     vn->to(device);
+    vn->parameters();
     adam = new torch::optim::Adam(vn->parameters());
 }
 
@@ -77,7 +82,7 @@ move agent::act(state s)
     return action;
 }
 
-void agent::train(int target)
+void agent::train(float target)
 {
     //stack the recorded predictions into batch
     torch::Tensor x = torch::stack(predictions);

@@ -10,7 +10,7 @@ public:
 	~agent();
 
 	move act(state s);																//act on thoughts
-	void train(int target);								//train based on training data
+	void train(float target);								//train based on training data
 	move train_act(state s, float epsilon);
 
 	static std::string const start_fen;			//starting position as fen string
@@ -20,6 +20,7 @@ private:
 	valnet vn;									//the value net
 	torch::optim::Adam* adam;					//the optimizer
 	torch::Device device;						//the device that handles machine learning
+	//std::shared_ptr<valnetImpl> vn;
 
 	std::vector<torch::Tensor> predictions;
 
@@ -33,6 +34,4 @@ private:
 	void policy_predict();						//predict the probability distribution across children of a node
 
 	void think();								//think about the position
-
-	void load_weights();						//load weights for neural networks from file
 };

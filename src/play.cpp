@@ -28,7 +28,7 @@ void play()
     using namespace std::literals::chrono_literals;
 
     chess_environment* env = new chess_environment;
-    agent loris(true);
+    agent loris(false);
 
     bool render = true;
     while (!glfwWindowShouldClose(env->get_window()))
