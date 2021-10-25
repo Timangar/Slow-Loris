@@ -14,10 +14,9 @@ agent::agent(bool load, double c, std::string fen)
     }
     else
     {
-        vn = std::make_shared<valnetImpl>();
+        vn = valnet();
     }
     vn->to(device);
-    vn->parameters();
     adam = new torch::optim::Adam(vn->parameters());
 }
 
@@ -58,6 +57,8 @@ move agent::act(state s)
     }
 
     //evaluate and append to predictions
+    double pos_eval = vn->forward(root->current()).item<double>();
+    std::cout << "estimated value of this position with " << root->color() << " to move is: " << pos_eval << std::endl;
     predictions.push_back(vn->forward(root->current()));
 
     think();
@@ -76,9 +77,6 @@ move agent::act(state s)
     move action = root->get(index)->action();
     root->inherit(index);
 
-    //evaluate and append to predictions
-    predictions.push_back(vn->forward(root->current()));
-
     return action;
 }
 
@@ -92,6 +90,10 @@ void agent::train(float target)
     //generate target batch from score
     torch::Tensor y = torch::ones({ (long long)predictions.size() }, device);
     y *= target;
+    for (unsigned i = 1; i < predictions.size(); i += 2) {  //we have to switch the result for all the black turns
+        y[i] *= -1;
+    }
+    std::cout << y << std::endl;
 
     //train using mean squared error
     torch::Tensor loss = torch::mse_loss(x, y), device;
@@ -122,6 +124,8 @@ move agent::train_act(state s, float epsilon)
     unsigned index = 0;
 
     //evaluate and append to predictions
+    double pos_eval = vn->forward(root->current()).item<double>();
+    std::cout << "estimated value of this position with " << root->color() << " to move is: " << pos_eval << std::endl;
     predictions.push_back(vn->forward(root->current()));
 
     //act randomly, if epsilon is hit
@@ -232,7 +236,7 @@ double agent::mcts_step(node* Node)
 
 void agent::mcts(unsigned long long max_depth)
 {
-    float thinking_time = (float)root->size() / 20;
+    float thinking_time = (float)root->size() / 10;
     unsigned long long depth = 0;
     auto begin = std::chrono::high_resolution_clock::now();
     thread_local auto end = begin;
@@ -254,7 +258,7 @@ double agent::eval(const node* Node) //return a positive value if white is winni
         return (double)Node->score();
 
     //predict and convert to double
-    double returnval = vn->forward(Node->current()).item<double>();
+    double returnval = vn->forward(Node->current()).item<double>() * Node->color();
 
     //return neural net eval
     return returnval;

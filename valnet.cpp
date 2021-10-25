@@ -13,7 +13,7 @@ valnetImpl::valnetImpl() :
 torch::Tensor valnetImpl::forward(torch::Tensor x)
 {
     x = torch::relu(c1(x));
-    x = torch::relu(c2(x));
+    x = flatten(torch::relu(c2(x)));
     x = torch::relu(fc1(x));
     x = torch::relu(fc2(x));
     x = torch::tanh(fc3(x));
@@ -57,5 +57,5 @@ torch::Tensor valnetImpl::forward(const state& s)
     x = torch::relu(fc2(x));
     x = torch::tanh(fc3(x));
 
-    return x * s.turn;
+    return x;
 }

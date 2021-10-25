@@ -6,12 +6,12 @@
 void train(int epochs, int render_intervall, float epsilon, float decay)
 {
 	chess_environment* env = new chess_environment;
-	agent* loris = new agent(false);
+	agent* loris = new agent(true);
 
 	for (unsigned epoch = 0; epoch < epochs; epoch++)
 	{
-		//env->set("4k2r/6r1/8/8/8/8/8/K7 w k - 0 1");
-		env->reset();
+		env->set("4k2r/6r1/8/8/8/8/8/K7 w k - 0 1");
+		//env->reset();
 		epsilon *= decay;
 		unsigned i = 0;
 		auto begin = std::chrono::high_resolution_clock::now();

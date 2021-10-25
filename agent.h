@@ -20,7 +20,6 @@ private:
 	valnet vn;									//the value net
 	torch::optim::Adam* adam;					//the optimizer
 	torch::Device device;						//the device that handles machine learning
-	//std::shared_ptr<valnetImpl> vn;
 
 	std::vector<torch::Tensor> predictions;
 
