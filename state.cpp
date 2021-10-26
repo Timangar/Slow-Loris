@@ -142,8 +142,10 @@ state::state()
 bool state::contains(move& m)
 {
 	for (const move& i : legal_moves)
-		if (i == m)
+		if (i == m) {
+			m = i;
 			return true;
+		}
 	return false;
 }
 

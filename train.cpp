@@ -6,7 +6,7 @@
 void train(int epochs, int render_intervall, float epsilon, float decay)
 {
 	chess_environment* env = new chess_environment;
-	agent* loris = new agent(true);
+	agent* loris = new agent(false);
 
 	for (unsigned epoch = 0; epoch < epochs; epoch++)
 	{
@@ -28,6 +28,7 @@ void train(int epochs, int render_intervall, float epsilon, float decay)
 		float score = env->get_state().score;
 
 		//calculate target if score is draw - we must "cheat" to speed up training
+		/*
 		if (!score) {
 			//define piece values
 			float values[7] = { 0.0f, 0.0f, 0.9f, 0.3f, 0.3f, 0.5f, 0.1f };
@@ -35,8 +36,9 @@ void train(int epochs, int render_intervall, float epsilon, float decay)
 			for (piece p : env->get_state().position)
 				score += values[p.get_type()] * p.get_color();
 
-			score = 0.7f * tanh(score);
+			score = 0.3f * tanh(score);
 		}
+		*/
 
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::seconds> (end - begin);

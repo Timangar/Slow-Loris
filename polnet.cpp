@@ -1,28 +1,17 @@
-#include "valnet.h"
+#include "polnet.h"
 
-
-valnetImpl::valnetImpl() :
-    device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU),
-    c1(register_module("c1", torch::nn::Conv2d(6, 32, 4))),
-    c2(register_module("c2", torch::nn::Conv2d(32, 64, 5))),
-    flatten(register_module("flatten", torch::nn::Flatten())),
-	fc1(register_module("fc1", torch::nn::Linear(64, 32))),
+polnetImpl::polnetImpl() :
+    collect(true),
+	device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU),
+	c1(register_module("c1", torch::nn::Conv2d(6, 8, 4))),
+	c2(register_module("c2", torch::nn::Conv2d(8, 16, 5))),
+	flatten(register_module("flatten", torch::nn::Flatten())),
+	fc1(register_module("fc1", torch::nn::Linear(16, 32))),
 	fc2(register_module("fc2", torch::nn::Linear(32, 32))),
-	fc3(register_module("fc3", torch::nn::Linear(32, 1)))
+	fc3(register_module("fc3", torch::nn::Linear(32, 1792)))
 {}
 
-torch::Tensor valnetImpl::forward(torch::Tensor x)
-{
-    x = torch::relu(c1(x));
-    x = flatten(torch::relu(c2(x)));
-    x = torch::relu(fc1(x));
-    x = torch::relu(fc2(x));
-    x = torch::tanh(fc3(x));
-
-	return x;
-}
-
-torch::Tensor valnetImpl::forward(const state& s)
+torch::Tensor polnetImpl::forward(const state & s)
 {
     //set up the tensor from a given state
     torch::Tensor x = torch::zeros({ 1, 6, 8, 8 }, device);
@@ -34,7 +23,7 @@ torch::Tensor valnetImpl::forward(const state& s)
     if (s.turn == 1)
         for (unsigned i = 0; i < 8; i++)
             for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[(int)i * 8 + (int)j];
+                piece p = s.position[i * 8 + j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)
@@ -43,7 +32,7 @@ torch::Tensor valnetImpl::forward(const state& s)
     else
         for (unsigned i = 0; i < 8; i++)
             for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[(int)i * 8 + (int)j];
+                piece p = s.position[i * 8 + j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)
@@ -54,7 +43,11 @@ torch::Tensor valnetImpl::forward(const state& s)
     x = flatten(torch::relu(c2(x)));
     x = torch::relu(fc1(x));
     x = torch::relu(fc2(x));
-    x = torch::tanh(fc3(x));
+    x = torch::softmax(fc3(x), 0);
 
-    return x;
+    train.push_back(x);
+
+    torch::Tensor ret = disc.discriminate(x, s.legal_moves, device);
+
+    return ret;
 }

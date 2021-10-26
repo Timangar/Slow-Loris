@@ -393,14 +393,14 @@ void legal_move_generator::king_moves(int i_rank, int i_file, int color,
 		{
 			if (!attacked_squares[rank * RANK + 5])
 				if (!attacked_squares[rank * RANK + 6])
-					if (!pos[rank * RANK + 5].get_color())
-						if (!pos[rank * RANK + 6].get_color())
+					if (!pos[rank * (int)RANK + 5].get_color())
+						if (!pos[rank * (int)RANK + 6].get_color())
 							legal_moves.push_back({ i, rank * RANK + 6, true });
 		}
 		if (cq)
 		{
 			if (!attacked_squares[rank * RANK + 2] && !attacked_squares[rank * RANK + 3]
-				&& !pos[rank * RANK + 2].get_color() && !pos[rank * RANK + 3].get_color())
+				&& !pos[rank * (int)RANK + 2].get_color() && !pos[rank * (int)RANK + 3].get_color())
 				legal_moves.push_back({ i, rank * RANK + 2, true });
 		}
 	}
@@ -628,7 +628,7 @@ void legal_move_generator::pawn_moves(int i_rank, int i_file, int color, const s
 	if (i_rank == start_rank) {
 		dest = i + 2 * direction * RANK;
 		if (sonderkonform(pinline, dest, check))
-			if (!position[dest].get_color() && !position[i + direction * RANK].get_color()) //can't jump over pieces
+			if (!position[dest].get_color() && !position[i + direction * (int)RANK].get_color()) //can't jump over pieces
 				legal_moves.push_back({ i, dest });
 	}
 	//capture left

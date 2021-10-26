@@ -11,8 +11,8 @@ void input(chess_environment* env, agent& loris)
 
     turn = env->get_state().turn;
     if (turn == color)
-        //env->player_input();
-        env->agent_input(loris.act(env->get_state()));
+        env->player_input();
+        //env->agent_input(loris.act(env->get_state()));
     else
         env->agent_input(loris.act(env->get_state()));
 }

@@ -1,18 +1,18 @@
 #pragma once
 #include "state.h"
-#include <torch/torch.h>
+#include "move_discriminator.h"
 
-namespace F = torch::nn::functional;
-
-struct valnetImpl : torch::nn::Module
+struct polnetImpl : torch::nn::Module
 {
-	valnetImpl();
-	torch::Tensor forward(torch::Tensor x);
+	polnetImpl();
 	torch::Tensor forward(const state& s);
 	torch::nn::Conv2d c1, c2;
 	torch::nn::Flatten flatten;
 	torch::nn::Linear fc1, fc2, fc3;
 	torch::Device device;
-};
-TORCH_MODULE(valnet);
 
+	bool collect;
+	std::vector<torch::Tensor> train;
+	mdis disc;
+};
+TORCH_MODULE(polnet);

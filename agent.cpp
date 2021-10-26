@@ -57,8 +57,8 @@ move agent::act(state s)
     }
 
     //evaluate and append to predictions
-    double pos_eval = vn->forward(root->current()).item<double>();
-    std::cout << "estimated value of this position with " << root->color() << " to move is: " << pos_eval << std::endl;
+    //double pos_eval = vn->forward(root->current()).item<double>();
+    //std::cout << "estimated value of this position with " << root->color() << " to move is: " << pos_eval << std::endl;
     predictions.push_back(vn->forward(root->current()));
 
     think();
@@ -124,8 +124,8 @@ move agent::train_act(state s, float epsilon)
     unsigned index = 0;
 
     //evaluate and append to predictions
-    double pos_eval = vn->forward(root->current()).item<double>();
-    std::cout << "estimated value of this position with " << root->color() << " to move is: " << pos_eval << std::endl;
+    //double pos_eval = vn->forward(root->current()).item<double>();
+    //std::cout << "estimated value of this position with " << root->color() << " to move is: " << pos_eval << std::endl;
     predictions.push_back(vn->forward(root->current()));
 
     //act randomly, if epsilon is hit
@@ -236,7 +236,7 @@ double agent::mcts_step(node* Node)
 
 void agent::mcts(unsigned long long max_depth)
 {
-    float thinking_time = (float)root->size() / 10;
+    float thinking_time = (float)root->size() / 30;
     unsigned long long depth = 0;
     auto begin = std::chrono::high_resolution_clock::now();
     thread_local auto end = begin;
