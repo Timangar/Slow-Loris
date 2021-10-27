@@ -9,6 +9,7 @@ typedef class move_discriminator
 public:
 	move_discriminator();
 	torch::Tensor discriminate(const torch::Tensor& pnetcalc, const std::vector<move>& legal_moves, const torch::Device& device);
+	unsigned find(const move& m);
 
 private:
 	unsigned disc_size;

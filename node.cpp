@@ -12,12 +12,11 @@ node& node::operator=(const node& other)
 	_t = other._t;
 	_o = other._o;
 
-	//_children = other.children();
 	return *this;
 }
 
-node::node(const node* parent, move action)
-	: _n(0), _t(0), _o(0), _action(action), _current(parent->_current)
+node::node(const node* parent, const move& action, float prob)
+	: _n(0), _t(0), _o(0), _action(action), _current(parent->_current), _move_prob(prob)
 {
 	if (!action.castle &&
 		!parent->_current.position[action.destination].get_color() &&
@@ -26,12 +25,10 @@ node::node(const node* parent, move action)
 	lmg gen;
 	gen.gen(_current, action, _history);
 	_size = _current.legal_moves.size();
-	//delete gen;
-	//std::cout << "node created" << std::endl;
 }
 
-node::node(state s) : _n(0), _t(0), _o(0), _action(0, 0), _current(s) { _size = _current.legal_moves.size(); }
-node::node() : _n(0), _t(0), _o(0), _action(0, 0), _current() {}
+node::node(state s) : _n(0), _t(0), _o(0), _action(0, 0), _current(s), _move_prob(-1.0f) { _size = _current.legal_moves.size(); }
+node::node() : _n(0), _t(0), _o(0), _action(0, 0), _current(), _move_prob(-1.0f) {}
 
 node::~node()
 {
@@ -73,14 +70,19 @@ bool node::inherit(unsigned index)
 	return ret;
 }
 
-void node::expand()
+void node::expand(polnet pn)
 {
 	std::lock_guard<std::mutex> l(lock);
 	if (_children.get() == nullptr && _size > 0) {
+		//expand tree by amount of legal moves
 		node* intermediate = new node[_size];
+
+		//calculate move probabilities
+		torch::Tensor probs = pn->forward(_current);
 		for (unsigned i = 0; i < _size; i++) {
-			intermediate[i] = { this, _current.legal_moves[i] };
+			intermediate[i] = { this, _current.legal_moves[i], probs[i].item<float>() };
 		}
+
 		_children.reset(intermediate);
 		_expanded = true;
 	}
@@ -143,7 +145,6 @@ std::array<piece, 64> node::position() const
 
 const move& node::action() const
 {
-	// TODO: hier return-Anweisung eingeben
 	return _action;
 }
 
@@ -174,6 +175,11 @@ void node::decrement_o()
 int node::color() const
 {
 	return _current.turn;
+}
+
+float node::move_prob() const
+{
+	return _move_prob;
 }
 
 std::unique_ptr<node[]> node::children()

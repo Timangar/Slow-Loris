@@ -3,7 +3,6 @@
 #include <thread>
 #include <random>
 #include <Windows.h>
-#include <mutex>
 
 std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -11,18 +10,19 @@ agent::agent(bool load, double c, std::string fen)
     : c(c), root(new node), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU) {
     if (load) {
         torch::load(vn, "valnet.pt");
+        torch::load(pn, "polnet.pt");
     }
-    else
-    {
-        vn = valnet();
-    }
+    
     vn->to(device);
-    adam = new torch::optim::Adam(vn->parameters());
+    pn->to(device);
+    val_adam = new torch::optim::Adam(vn->parameters());
+    pol_adam = new torch::optim::Adam(pn->parameters());
 }
 
 agent::~agent()
 {
-    delete adam;
+    delete val_adam;
+    delete pol_adam;
 }
 
 void agent::think()
@@ -53,13 +53,8 @@ move agent::act(state s)
     bool reassign = !root->inherit(s);
     if (reassign) {
         root.reset(new node(s));
-        root->expand();
+        root->expand(pn);
     }
-
-    //evaluate and append to predictions
-    //double pos_eval = vn->forward(root->current()).item<double>();
-    //std::cout << "estimated value of this position with " << root->color() << " to move is: " << pos_eval << std::endl;
-    predictions.push_back(vn->forward(root->current()));
 
     think();
 
@@ -75,13 +70,16 @@ move agent::act(state s)
    
     //make root the chosen child
     move action = root->get(index)->action();
+    played_moves.push_back(action);
     root->inherit(index);
 
     return action;
 }
 
 void agent::train(float target)
-{
+{   
+    //valnet
+    // 
     //stack the recorded predictions into batch
     torch::Tensor x = torch::stack(predictions);
     x.to(device);
@@ -93,19 +91,44 @@ void agent::train(float target)
     for (unsigned i = 1; i < predictions.size(); i += 2) {  //we have to switch the result for all the black turns
         y[i] *= -1;
     }
-    std::cout << y << std::endl;
 
     //train using mean squared error
-    torch::Tensor loss = torch::mse_loss(x, y), device;
+    torch::Tensor loss = torch::mse_loss(x, y);
+    loss.to(device);
     loss.backward();
-    adam->step();
+    val_adam->step();
+
+    //polnet
+    //
+    //stack the recorded predictions into batch
+    x = torch::stack(polnet_training_data);
+    
+    //generate target batch from played moves
+    mdis finder;
+    auto y_options = torch::TensorOptions().dtype(torch::kInt64).device(torch::kCUDA, 0);
+    y = torch::empty({ (int)played_moves.size() }, y_options);
+    for (int i = 0; i < played_moves.size(); i++) {
+        y.index_put_({ i }, (long)finder.find(played_moves[i]));
+    }
+
+    x.to(device);
+
+    torch::Tensor loss2 = torch::zeros({ 0 }, device);
+    loss2 = torch::cross_entropy_loss(x, y);
+
+    loss2.backward();
+    pol_adam->step();
 
     //reset everything
-    adam->zero_grad();
+    val_adam->zero_grad();
+    pol_adam->zero_grad();
     predictions.clear();
-
+    played_moves.clear();
+    polnet_training_data.clear();
+    
     //save the parameters
     torch::save(vn, "valnet.pt");
+    torch::save(pn, "polnet.pt");
 }
 
 move agent::train_act(state s, float epsilon)
@@ -117,7 +140,7 @@ move agent::train_act(state s, float epsilon)
     bool reassign = !root->inherit(s);
     if (reassign) {
         root.reset(new node(s));
-        root->expand();
+        root->expand(pn);
     }
 
     //the index of the move which will be chosen
@@ -127,6 +150,8 @@ move agent::train_act(state s, float epsilon)
     //double pos_eval = vn->forward(root->current()).item<double>();
     //std::cout << "estimated value of this position with " << root->color() << " to move is: " << pos_eval << std::endl;
     predictions.push_back(vn->forward(root->current()));
+    polnet_training_data.push_back(pn->forward(root->current(), 1));
+
 
     //act randomly, if epsilon is hit
     std::default_random_engine randeng;
@@ -159,23 +184,27 @@ move agent::train_act(state s, float epsilon)
         }
     }
 
-    return root->get(index)->action();
+    //make root the chosen child
+    move action = root->get(index)->action();
+    played_moves.push_back(action);
+
+    return action;
 }
 
-double agent::UCB1(const node* child, int N)
+float agent::UCB1(const node* child, int N)
 {
 	if (child->n())
-		return (double)child->t() / ((double)child->n() + (double)child->o()) - c * sqrt(log(N) / ((double)child->n() + (double)child->o()));
+		return child->t() / ((float)child->n() + (float)child->o()) + 2 * child->move_prob() * sqrt(log(N) / ((float)child->n() + (float)child->o()));
 	else
-		return (double)INFINITY;
+		return 2*sqrt(child->move_prob());
 }
 
 unsigned agent::select(node* parent)
 {
 	unsigned index = 0;
-	double highscore = double(-INFINITY);
+	float highscore = float(-INFINITY);
 	for (unsigned i = 0; i < parent->size(); i++) {
-		double score = UCB1(parent->get(i), parent->n());
+		float score = UCB1(parent->get(i), parent->n());
 		if (highscore < score) {
 			highscore = score;
 			index = i;
@@ -187,7 +216,7 @@ unsigned agent::select(node* parent)
 double agent::expand(node* Node)
 {
 	//for every legal move, we have to create a new node
-	Node->expand();
+	Node->expand(pn);
 	return mcts_step(Node->get(select(Node)));
 }
 
@@ -262,10 +291,6 @@ double agent::eval(const node* Node) //return a positive value if white is winni
 
     //return neural net eval
     return returnval;
-}
-
-void agent::policy_predict()
-{
 }
 
 /*

@@ -1,5 +1,6 @@
 #pragma once
 #include "legal_move_generator.h"
+#include "polnet.h"
 #include <memory>
 #include <mutex>
 
@@ -7,7 +8,7 @@ class node
 {
 public:
 	node& operator=(const node& other);
-	node(const node* parent, move action);
+	node(const node* parent, const move& action, float prob);
 	node(state s);
 	node();
 	~node();
@@ -17,14 +18,14 @@ public:
 	bool inherit(state s);				//absorb the branch of one of the child nodes, delete rest of tree, returns true if successful
 	bool inherit(unsigned index);		//inherit based on index, returns true if successful
 
-	void expand();
+	void expand(polnet pn);
 
 	bool expanded() const;
 
 	node* get(int i);
 
 	int n() const;
-	int t() const;
+	float t() const;
 	int o() const;
 
 	bool terminal() const;				//true if the state is a terminal state
@@ -43,13 +44,15 @@ public:
 
 	int color() const;
 
+	float move_prob() const;
+
 
 private:
 	std::mutex lock;
 	state _current;								//current state of this node
 	std::vector<state> _history;				//history leading to this node
 
-	//std::mutex lock;
+	float _move_prob;							//likelihood of this move being played according to polnet
 
 	std::unique_ptr<node[]> _children;			//leaf nodes
 	std::unique_ptr<node[]> children();
@@ -58,7 +61,7 @@ private:
 	unsigned _size = 0;
 
 	int _n;										//visit count
-	double _t;									//total value
+	float _t;									//total value
 	int _o;										//active threads on node
 
 	move _action;								//the action that was taken to get to this state

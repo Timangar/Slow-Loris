@@ -9,8 +9,6 @@ move_discriminator::move_discriminator() : disc_size(0)
 			bishop(rank, file);
 			knight(rank, file);
 		}
-	std::cout << "disc final size is: " << disc_size << std::endl;
-	std::cin.get();
 }
 
 torch::Tensor move_discriminator::discriminate(const torch::Tensor& pnetcalc, const std::vector<move>& legal_moves, const torch::Device& device)
@@ -24,6 +22,11 @@ torch::Tensor move_discriminator::discriminate(const torch::Tensor& pnetcalc, co
 	x = torch::nn::functional::softmax(x, 0);
 
 	return x;
+}
+
+unsigned move_discriminator::find(const move& m)
+{
+	return finder[m];
 }
 
 void move_discriminator::rook(int rank, int file)
