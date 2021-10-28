@@ -8,8 +8,8 @@ class node
 {
 public:
 	node& operator=(const node& other);
-	node(const node* parent, const move& action, float prob);
-	node(state s);
+	node(const node* parent, const move& action, double prob = -1.0);
+	node(const state& s, const move& m);
 	node();
 	~node();
 
@@ -44,7 +44,8 @@ public:
 
 	int color() const;
 
-	float move_prob() const;
+	double move_prob() const;
+	void set_move_prob(double n_prob);
 
 
 private:
@@ -52,7 +53,7 @@ private:
 	state _current;								//current state of this node
 	std::vector<state> _history;				//history leading to this node
 
-	float _move_prob;							//likelihood of this move being played according to polnet
+	double _move_prob;							//likelihood of this move being played according to polnet
 
 	std::unique_ptr<node[]> _children;			//leaf nodes
 	std::unique_ptr<node[]> children();

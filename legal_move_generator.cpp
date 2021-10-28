@@ -8,6 +8,10 @@ legal_move_generator::legal_move_generator() : attacked_squares{ 0 } {}
 void legal_move_generator::gen(state& s, move m, const std::vector<state>& history, bool init)
 {
 	if (!init) {
+		//legacy code replacement: the state color used to be changed in this function.
+		//now it is changed right before. s.turn must be replaced by "previous_turn" and "s.turn" = current respectively.
+		int previous_turn = s.turn * -1;
+
 		init = true;
 		bool increment_fifty_move_count = true;
 		//make normal part of move
@@ -17,7 +21,7 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 			increment_fifty_move_count = false;
 		//check for promotion, because the piece type has to be changed
 		if (m.promotion)
-			s.position[m.destination] = {2, s.turn};
+			s.position[m.destination] = {2, previous_turn};
 		else
 			s.position[m.destination] = s.position[m.origin];
 		s.position[m.origin] = piece();
@@ -63,12 +67,12 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 		//king move:
 		if (s.position[m.destination].get_type() == 1)
 		{
-			if (s.turn == BLACK) {
+			if (previous_turn == BLACK) {
 				s.castling_b_k = false;
 				s.castling_b_q = false;
 				s.pos_bk = m.destination;
 			}
-			else if (s.turn == WHITE) {
+			else if (previous_turn == WHITE) {
 				s.castling_w_k = false;
 				s.castling_w_q = false;
 				s.pos_wk = m.destination;
@@ -140,13 +144,13 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 
 		//handle if the last move was an en passant capture
 		if (m.en_passant) {
-			if (s.turn == WHITE)
+			if (previous_turn == WHITE)
 				s.position[m.destination + 8] = piece();
-			else if (s.turn == BLACK)
+			else if (previous_turn == BLACK)
 				s.position[m.destination - 8] = piece();
 		}
 
-		s.turn = s.turn * -1;
+		// here used to be: s.turn = s.turn * -1; ---> everything before is "previous turn", after is "s.turn"
 	}
 	//create a map of all the squares attacked by enemy pieces
 	//create a map per x-ray to the king to determine pins

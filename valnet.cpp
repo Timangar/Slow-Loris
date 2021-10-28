@@ -34,7 +34,7 @@ torch::Tensor valnetImpl::forward(const state& s)
     if (s.turn == 1)
         for (unsigned i = 0; i < 8; i++)
             for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[(int)i * 8 + (int)j];
+                piece p = s.position[(int)i * (int)8 + (int)j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)
@@ -43,7 +43,7 @@ torch::Tensor valnetImpl::forward(const state& s)
     else
         for (unsigned i = 0; i < 8; i++)
             for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[(int)i * 8 + (int)j];
+                piece p = s.position[(int)i * (int)8 + (int)j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)

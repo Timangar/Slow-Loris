@@ -6,8 +6,8 @@
 
 std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-agent::agent(bool load, double c, std::string fen)
-    : c(c), root(new node), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU) {
+agent::agent(bool load, double c, double learning_rate, std::string fen)
+    : c(c), root(new node), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU), depth(0) {
     if (load) {
         torch::load(vn, "valnet.pt");
         torch::load(pn, "polnet.pt");
@@ -15,8 +15,8 @@ agent::agent(bool load, double c, std::string fen)
     
     vn->to(device);
     pn->to(device);
-    val_adam = new torch::optim::Adam(vn->parameters());
-    pol_adam = new torch::optim::Adam(pn->parameters());
+    val_adam = new torch::optim::Adam(vn->parameters(), torch::optim::AdamOptions(learning_rate));
+    pol_adam = new torch::optim::Adam(pn->parameters(), torch::optim::AdamOptions(learning_rate));
 }
 
 agent::~agent()
@@ -27,16 +27,13 @@ agent::~agent()
 
 void agent::think()
 {
-    //determine max depth and number of threads based on computer stats
+    //determine max depth and number of threads
     const unsigned n_threads = 4;
+    const unsigned max_depth = 400;
 
-    MEMORYSTATUSEX memory_status;
-    memory_status.dwLength = sizeof(memory_status);
-    GlobalMemoryStatusEx(&memory_status);
+    depth = 0;
 
-    unsigned long long max_depth = memory_status.ullAvailPhys / 8 / sizeof(node) / n_threads;
     //start threads here
-
     std::thread workers[n_threads];
 
     for (unsigned i = 0; i < n_threads; i++) {
@@ -47,12 +44,12 @@ void agent::think()
     }
 }
 
-move agent::act(state s)
+move agent::act(const state& s, const move& m )
 {
     //check if state is already in calculation
     bool reassign = !root->inherit(s);
     if (reassign) {
-        root.reset(new node(s));
+        root.reset(new node(s, m));
         root->expand(pn);
     }
 
@@ -131,15 +128,15 @@ void agent::train(float target)
     torch::save(pn, "polnet.pt");
 }
 
-move agent::train_act(state s, float epsilon)
+move agent::train_act(const state& s, float epsilon, const move& m)
 {
     //this function replaces "act" during training and involves making random moves. 
     //as it is used exclusively in self play, the reassignment in the end is deleted
 
     //check if state is already in calculation
-    bool reassign = !root->inherit(s);
+    bool reassign = true;//!root->inherit(s);
     if (reassign) {
-        root.reset(new node(s));
+        root.reset(new node(s, m));
         root->expand(pn);
     }
 
@@ -152,35 +149,17 @@ move agent::train_act(state s, float epsilon)
     predictions.push_back(vn->forward(root->current()));
     polnet_training_data.push_back(pn->forward(root->current(), 1));
 
+    //ensure exploration by using dirichlet distribution
+    dirichlet_noise();
 
-    //act randomly, if epsilon is hit
-    std::default_random_engine randeng;
-    auto now = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now());
-    auto duration = now.time_since_epoch();
-    randeng.seed(duration.count());
-    std::uniform_int_distribution<int> epsilon_dist(0, 100);
-    epsilon *= 100;
+    think();
 
-    int e1 = epsilon_dist(randeng);
-
-    if (e1 < epsilon) {
-        if (!root->current().legal_moves.size())
-            __debugbreak;
-        std::uniform_int_distribution<int> dist(0, root->current().legal_moves.size() - 1);
-
-        index = dist(randeng);
-    }
-
-    else {
-        think();
-
-        int highscore = 0;
-        for (unsigned i = 0; i < root->size(); i++) {
-            int score = root->get(i)->n();
-            if (highscore < score) {
-                highscore = score;
-                index = i;
-            }
+    int highscore = 0;
+    for (unsigned i = 0; i < root->size(); i++) {
+        int score = root->get(i)->n();
+        if (highscore < score) {
+            highscore = score;
+            index = i;
         }
     }
 
@@ -191,12 +170,33 @@ move agent::train_act(state s, float epsilon)
     return action;
 }
 
-float agent::UCB1(const node* child, int N)
+void agent::dirichlet_noise()
+{
+    const int size = root->size();
+
+    std::random_device rnd;
+    std::default_random_engine gen(rnd());
+    std::gamma_distribution<float> gamma(0.3f, 1);
+
+    float sum = 0;
+    float* noise = new float[size];
+
+    for (unsigned i = 0; i < size; i++) {
+        noise[i] = root->get(i)->move_prob();
+        sum += noise[i];
+    }
+    for (unsigned i = 0; i < size; i++)
+        root->set_move_prob((0.75f * root->move_prob()) + (0.25f * noise[i] / sum));
+
+    delete[] noise;
+}
+
+double agent::UCB1(const node* child, int N)
 {
 	if (child->n())
-		return child->t() / ((float)child->n() + (float)child->o()) + 2 * child->move_prob() * sqrt(log(N) / ((float)child->n() + (float)child->o()));
+		return child->t() / ((double)child->n() + (double)child->o()) + c * child->move_prob() * sqrt(log(N) / ((double)child->n() + (double)child->o()));
 	else
-		return 2*sqrt(child->move_prob());
+		return c * child->move_prob() / (1 + (double)child->o());
 }
 
 unsigned agent::select(node* parent)
@@ -204,12 +204,13 @@ unsigned agent::select(node* parent)
 	unsigned index = 0;
 	float highscore = float(-INFINITY);
 	for (unsigned i = 0; i < parent->size(); i++) {
-		float score = UCB1(parent->get(i), parent->n());
+	    double score = UCB1(parent->get(i), parent->n());
 		if (highscore < score) {
 			highscore = score;
 			index = i;
 		}
 	}
+
 	return index;
 }
 
@@ -217,7 +218,7 @@ double agent::expand(node* Node)
 {
 	//for every legal move, we have to create a new node
 	Node->expand(pn);
-	return mcts_step(Node->get(select(Node)));
+	return (Node->terminal()) ? eval(Node) : mcts_step(Node->get(select(Node)));
 }
 
 double agent::mcts_step(node* Node)
@@ -226,7 +227,6 @@ double agent::mcts_step(node* Node)
 //in the forward pass but decremented in the backprop
 {
     Node->increment_o();
-    bool expanding = false;
     double evaluation;
 
     //is this a terminal state?
@@ -263,31 +263,24 @@ double agent::mcts_step(node* Node)
     return evaluation;
 }
 
-void agent::mcts(unsigned long long max_depth)
+void agent::mcts(unsigned max_depth)
 {
-    float thinking_time = (float)root->size() / 30;
-    unsigned long long depth = 0;
-    auto begin = std::chrono::high_resolution_clock::now();
-    thread_local auto end = begin;
-    thread_local std::chrono::duration<float> duration = end - begin;
-
-    while (depth < max_depth && duration.count() < thinking_time) {
+    while (depth < max_depth) {
         mcts_step(root.get());
-        end = std::chrono::high_resolution_clock::now();
-        duration = end - begin;
-        depth++;
     }
-    //std::cout << "search depth: " << depth << std::endl;
 }
 
 double agent::eval(const node* Node) //return a positive value if white is winning, a negative value if black is winning
 {
     //return terminal state value if available
-    if (Node->terminal())
-        return (double)Node->score();
+    //otherwise, predict and convert to double
+    double returnval = (Node->terminal()) ? (double)Node->score() : 
+        vn->forward(Node->current()).item<double>() * Node->color();
 
-    //predict and convert to double
-    double returnval = vn->forward(Node->current()).item<double>() * Node->color();
+    //an evaluation marks a full playout. increment depth here.
+    dv.lock();
+    depth++;
+    dv.unlock();
 
     //return neural net eval
     return returnval;

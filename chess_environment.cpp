@@ -26,6 +26,7 @@ void chess_environment::step(move m)
 {
     if (current_state.contains(m) && !current_state.terminal_state) {
         history.push_back(current_state);
+        current_state.turn *= -1;
         gen.gen(current_state, m, history);
     }
     else

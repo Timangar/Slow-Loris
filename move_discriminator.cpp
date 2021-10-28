@@ -20,7 +20,7 @@ torch::Tensor move_discriminator::discriminate(const torch::Tensor& pnetcalc, co
 		x[i] = pnetcalc[finder[legal_moves[i]]];
 
 	x = torch::nn::functional::softmax(x, 0);
-
+	
 	return x;
 }
 

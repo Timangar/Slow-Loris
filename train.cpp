@@ -6,7 +6,7 @@
 void train(int epochs, int render_intervall, float epsilon, float decay)
 {
 	chess_environment* env = new chess_environment;
-	agent* loris = new agent(false);
+	agent* loris = new agent(true);
 
 	for (unsigned epoch = 0; epoch < epochs; epoch++)
 	{
@@ -20,7 +20,6 @@ void train(int epochs, int render_intervall, float epsilon, float decay)
 		{
 			env->agent_input(loris->train_act(env->get_state(), epsilon));
 			if (epoch % render_intervall == 0) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(20));
 				env->render();
 			}
 			i++;
@@ -45,7 +44,6 @@ void train(int epochs, int render_intervall, float epsilon, float decay)
 
 		std::cout << "epoch: " << epoch << std::endl
 			<< "winner: " << score << std::endl
-			<< "epsilon: " << epsilon << std::endl
 			<< "elapsed time: " << duration.count() << std::endl << std::endl;
 
 		loris->train(score);
