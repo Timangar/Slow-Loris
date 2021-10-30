@@ -224,7 +224,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Dev\global_dependencies\libtorch\include\torch\csrc\api\include;C:\Dev\global_dependencies\libtorch\include;$(ProjectDir);$(ProjectDir)/src;$(SolutionDir)Dependencies\Include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\NVIDIA Corporation\NvToolsExt\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\include;C:\Program Files\NVIDIA Corporation\NvToolsExt\\include;C:\Dev\global_dependencies\libtorch_release\libtorch\include\torch\csrc\api\include;C:\Dev\global_dependencies\libtorch_release\libtorch\include;$(ProjectDir);$(ProjectDir)/src;$(SolutionDir)Dependencies\Include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

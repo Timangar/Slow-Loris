@@ -1,15 +1,15 @@
 #pragma once
 #include <map>
-#include <vector>
-#include "move.h"
+#include "state.h"
 #include <torch/torch.h>
 
 typedef class move_discriminator
 {
 public:
 	move_discriminator();
-	torch::Tensor discriminate(const torch::Tensor& pnetcalc, const std::vector<move>& legal_moves, const torch::Device& device);
+	torch::Tensor discriminate(const torch::Tensor& pnetcalc, const state& legal_moves, const torch::Device& device);
 	unsigned find(const move& m);
+	unsigned inverse_find(const move& m);
 
 private:
 	unsigned disc_size;

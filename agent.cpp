@@ -29,7 +29,7 @@ void agent::think()
 {
     //determine max depth and number of threads
     const unsigned n_threads = 4;
-    const unsigned max_depth = 400;
+    const unsigned max_depth = 800;
 
     depth = 0;
 
@@ -75,53 +75,64 @@ move agent::act(const state& s, const move& m )
 
 void agent::train(float target)
 {   
+    //set both networks to training mode
+    pn->train();
+    vn->train();
+
+    //stack the recorded positions into batch
+    torch::Tensor inputs = torch::stack(positions);
+    inputs.to(device);
+    std::cout << inputs.sizes() << std::endl;
+
     //valnet
     // 
-    //stack the recorded predictions into batch
-    torch::Tensor x = torch::stack(predictions);
-    x.to(device);
-    x = x.view(predictions.size());
-
     //generate target batch from score
-    torch::Tensor y = torch::ones({ (long long)predictions.size() }, device);
-    y *= target;
-    for (unsigned i = 1; i < predictions.size(); i += 2) {  //we have to switch the result for all the black turns
-        y[i] *= -1;
+    val_adam->zero_grad();
+
+    torch::Tensor y_val = torch::ones({ (long long)positions.size(), 1 }, device);
+    y_val *= target;
+    for (unsigned i = 1; i < positions.size(); i += 2) {  //we have to switch the result for all the black turns
+        y_val[i] *= -1;
     }
 
     //train using mean squared error
-    torch::Tensor loss = torch::mse_loss(x, y);
-    loss.to(device);
-    loss.backward();
+    torch::Tensor x_val = vn->forward(inputs);
+    x_val.to(device);
+    torch::Tensor loss_val = torch::mse_loss(x_val, y_val);
+    loss_val.to(device);
+    loss_val.backward();
     val_adam->step();
 
     //polnet
     //
-    //stack the recorded predictions into batch
-    x = torch::stack(polnet_training_data);
-    
     //generate target batch from played moves
+    pol_adam->zero_grad();
+
     mdis finder;
     auto y_options = torch::TensorOptions().dtype(torch::kInt64).device(torch::kCUDA, 0);
-    y = torch::empty({ (int)played_moves.size() }, y_options);
+    torch::Tensor y_pol = torch::empty({ (int)played_moves.size() }, y_options);
     for (int i = 0; i < played_moves.size(); i++) {
-        y.index_put_({ i }, (long)finder.find(played_moves[i]));
+        if (!(i % 2))
+            y_pol.index_put_({ i }, (long)finder.inverse_find(played_moves[i]));
+        else
+            y_pol.index_put_({ i }, (long)finder.find(played_moves[i]));
     }
 
-    x.to(device);
+    //generate predictions
+    torch::Tensor x_pol = pn->forward(inputs);
+    x_pol.to(device);
 
-    torch::Tensor loss2 = torch::zeros({ 0 }, device);
-    loss2 = torch::cross_entropy_loss(x, y);
-
-    loss2.backward();
+    //train using cross entropy loss
+    torch::Tensor loss_pol = torch::cross_entropy_loss(x_pol, y_pol);
+    loss_pol.backward();
     pol_adam->step();
 
     //reset everything
-    val_adam->zero_grad();
-    pol_adam->zero_grad();
-    predictions.clear();
     played_moves.clear();
-    polnet_training_data.clear();
+    positions.clear();
+
+    pn->eval();
+    vn->eval();
     
     //save the parameters
     torch::save(vn, "valnet.pt");
@@ -143,11 +154,12 @@ move agent::train_act(const state& s, float epsilon, const move& m)
     //the index of the move which will be chosen
     unsigned index = 0;
 
+    std::cout << "position is evaluated as: " << eval(root.get()) << std::endl;
+
     //evaluate and append to predictions
     //double pos_eval = vn->forward(root->current()).item<double>();
     //std::cout << "estimated value of this position with " << root->color() << " to move is: " << pos_eval << std::endl;
-    predictions.push_back(vn->forward(root->current()));
-    polnet_training_data.push_back(pn->forward(root->current(), 1));
+    positions.push_back(position_convert(root->current()));
 
     //ensure exploration by using dirichlet distribution
     dirichlet_noise();
@@ -273,17 +285,48 @@ void agent::mcts(unsigned max_depth)
 double agent::eval(const node* Node) //return a positive value if white is winning, a negative value if black is winning
 {
     //return terminal state value if available
+    dv.lock();
     //otherwise, predict and convert to double
     double returnval = (Node->terminal()) ? (double)Node->score() : 
         vn->forward(Node->current()).item<double>() * Node->color();
 
     //an evaluation marks a full playout. increment depth here.
-    dv.lock();
     depth++;
     dv.unlock();
 
     //return neural net eval
     return returnval;
+}
+
+torch::Tensor agent::position_convert(const state& s)
+{
+    //set up the tensor from a given state
+    torch::Tensor x = torch::zeros({ 6, 8, 8 }, device).contiguous();
+
+    //run through the position. the piece type converts to the 0d of the tensor,
+    //the piece color will be saved. the "i" index is the 1d of the tensor
+
+    //take into account that the tensor must be rotated
+    if (s.turn == 1)
+        for (unsigned i = 0; i < 8; i++)
+            for (unsigned j = 0; j < 8; j++) {
+                piece p = s.position[(int)i * (int)8 + (int)j];
+                unsigned ptype = p.get_type();
+                int pcolor = p.get_color();
+                if (pcolor)
+                    x[ptype - 1][i][j] = pcolor;
+            }
+    else
+        for (unsigned i = 0; i < 8; i++)
+            for (unsigned j = 0; j < 8; j++) {
+                piece p = s.position[(int)i * (int)8 + (int)j];
+                unsigned ptype = p.get_type();
+                int pcolor = p.get_color();
+                if (pcolor)
+                    x[ptype - 1][7 - i][7 - j] = -pcolor;
+            }
+
+    return x;
 }
 
 /*

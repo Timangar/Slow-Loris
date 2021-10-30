@@ -7,7 +7,7 @@
 class agent
 {
 public:
-	agent(bool load = false, double c = 10, double learning_rate = 0.2, std::string fen = start_fen);
+	agent(bool load = false, double c = 10, double learning_rate = 0.0002, std::string fen = start_fen);
 	~agent();
 
 	move act(const state& s, const move& m = { 0, 0 });							//act on thoughts
@@ -28,9 +28,8 @@ private:
 
 	std::mutex dv;								//to savely increment depth
 
-	std::vector<move> played_moves;				//the played moves for training the polnet (y input)
-	std::vector<torch::Tensor> polnet_training_data;	//the training x input for the polnet
-	std::vector<torch::Tensor> predictions;		//the predictions as x input for valnet training
+	std::vector<move> played_moves;				//the played moves for training the polnet (targets)
+	std::vector<torch::Tensor> positions;		//the played positions for training the neural nets (inputs)
 
 	void dirichlet_noise();						//to ensure exploration, the root is multiplied by dirichlet noise
 	void think();								//think about the position
@@ -42,4 +41,5 @@ private:
 	void mcts(unsigned max_depth);				//repeatedly call mcts_step until time is up or max depth is reached
 	double eval(const node* Node);				//evaluate a node
 
+	torch::Tensor position_convert(const state& s);		//converts an array position into a tensor position
 };

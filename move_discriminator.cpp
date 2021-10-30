@@ -11,13 +11,17 @@ move_discriminator::move_discriminator() : disc_size(0)
 		}
 }
 
-torch::Tensor move_discriminator::discriminate(const torch::Tensor& pnetcalc, const std::vector<move>& legal_moves, const torch::Device& device)
+torch::Tensor move_discriminator::discriminate(const torch::Tensor& pnetcalc, const state& s, const torch::Device& device)
 {
 	//setup return Tensor
-	torch::Tensor x = torch::zeros({ (long long)legal_moves.size() }, device);
+	torch::Tensor x = torch::zeros({ (long long)s.legal_moves.size() }, device);
 
-	for (unsigned i = 0; i < legal_moves.size(); i++)
-		x[i] = pnetcalc[finder[legal_moves[i]]];
+	if (s.turn == 1)
+		for (unsigned i = 0; i < s.legal_moves.size(); i++)
+			x[i] = pnetcalc[find(s.legal_moves[i])];
+	else
+		for (unsigned i = 0; i < s.legal_moves.size(); i++)
+			x[i] = pnetcalc[inverse_find(s.legal_moves[i])];
 
 	x = torch::nn::functional::softmax(x, 0);
 	
@@ -27,6 +31,12 @@ torch::Tensor move_discriminator::discriminate(const torch::Tensor& pnetcalc, co
 unsigned move_discriminator::find(const move& m)
 {
 	return finder[m];
+}
+
+unsigned move_discriminator::inverse_find(const move& m)
+{
+	move n((63 - m.origin), (63 - m.destination));
+	return finder[n];
 }
 
 void move_discriminator::rook(int rank, int file)
