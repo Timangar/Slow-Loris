@@ -204,8 +204,8 @@ void agent::dirichlet_noise()
 double agent::UCB1(const node* child, int N)
 {
     int cpuct_base = 19652;
-    double cpuct = log((child->n() + cpuct_base + 1) / cpuct_base) + c;
-    double Q = (child->n()) ? (child->t() / child->n()) : child->move_prob();
+    double cpuct = log((N + cpuct_base + 1) / cpuct_base) + c;
+    double Q = (child->n()) ? (child->t() / child->n()) : cpuct * child->move_prob();
     return Q + (cpuct * child->move_prob() * sqrt(N) / ((double)child->n() + 1));
 
     /*
