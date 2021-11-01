@@ -9,7 +9,7 @@ class node
 public:
 	node& operator=(const node& other);
 	node(const node* parent, const move& action, double prob = -1.0);
-	node(const state& s, const move& m);
+	node(const state& s, std::vector<state> history, const move& m);
 	node();
 	~node();
 
@@ -52,6 +52,8 @@ private:
 	std::mutex lock;
 	state _current;								//current state of this node
 	std::vector<state> _history;				//history leading to this node
+
+	int failed_on;
 
 	double _move_prob;							//likelihood of this move being played according to polnet
 

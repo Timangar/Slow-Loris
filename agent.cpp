@@ -49,7 +49,7 @@ move agent::act(const state& s, const move& m )
     //check if state is already in calculation
     bool reassign = !root->inherit(s);
     if (reassign) {
-        root.reset(new node(s, m));
+        root.reset(new node(s, std::vector<state>(), m));
         root->expand(pn);
     }
 
@@ -139,22 +139,20 @@ void agent::train(float target)
     torch::save(pn, "polnet.pt");
 }
 
-move agent::train_act(const state& s, float epsilon, const move& m)
+move agent::train_act(const state& s, std::vector<state> history, const move& m)
 {
     //this function replaces "act" during training and involves making random moves. 
     //as it is used exclusively in self play, the reassignment in the end is deleted
 
     //check if state is already in calculation
-    bool reassign = true;//!root->inherit(s);
+    bool reassign = true; // !root->inherit(s);
     if (reassign) {
-        root.reset(new node(s, m));
+        root.reset(new node(s, history, m));
         root->expand(pn);
     }
 
     //the index of the move which will be chosen
     unsigned index = 0;
-
-    std::cout << "position is evaluated as: " << eval(root.get()) << std::endl;
 
     //evaluate and append to predictions
     //double pos_eval = vn->forward(root->current()).item<double>();
@@ -205,10 +203,17 @@ void agent::dirichlet_noise()
 
 double agent::UCB1(const node* child, int N)
 {
+    int cpuct_base = 19652;
+    double cpuct = log((child->n() + cpuct_base + 1) / cpuct_base) + c;
+    double Q = (child->n()) ? (child->t() / child->n()) : child->move_prob();
+    return Q + (cpuct * child->move_prob() * sqrt(N) / ((double)child->n() + 1));
+
+    /*
 	if (child->n())
 		return child->t() / ((double)child->n() + (double)child->o()) + c * child->move_prob() * sqrt(log(N) / ((double)child->n() + (double)child->o()));
 	else
-		return c * child->move_prob() / (1 + (double)child->o());
+		return c * child->move_prob();
+    */
 }
 
 unsigned agent::select(node* parent)

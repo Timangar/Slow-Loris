@@ -13,7 +13,7 @@ polnetImpl::polnetImpl() :
 torch::Tensor polnetImpl::forward(const state & s)
 {
     //set up the tensor from a given state
-    torch::Tensor x = torch::zeros({ 1, 6, 8, 8 }, device);
+    torch::Tensor x = torch::zeros({ 1, 6, 8, 8 }, device).contiguous();
 
     //run through the position. the piece type converts to the 0d of the tensor,
     //the piece color will be saved. the "i" index is the 1d of the tensor

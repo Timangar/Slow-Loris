@@ -14,6 +14,10 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 
 		init = true;
 		bool increment_fifty_move_count = true;
+
+		if (m.castle)
+			increment_fifty_move_count = false;
+
 		//make normal part of move
 		//-------------------------
 		//check if move is a captures
@@ -50,9 +54,17 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 		}
 		else
 			s.fifty_move_count = 0;
+		/*
+		if (history.size() < 4)
+			if (s.fifty_move_count != history.size()) {
+				tools tool;
+				tool.log_state(s);
+				__debugbreak();
+			}
+		*/
 		//threefold repetition
 		if (history.size() > 4) {
-			for (int i = 4; i <= s.fifty_move_count; i += 2) {
+			for (int i = 4; i <= s.fifty_move_count && i <= history.size(); i++) {
 				if (history[(history.size() - i)] == s)
 					s.repetition_count = history[history.size() - 1].repetition_count + 1;
 			}
