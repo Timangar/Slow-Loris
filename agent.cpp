@@ -29,7 +29,7 @@ void agent::think()
 {
     //determine max depth and number of threads
     const unsigned n_threads = 4;
-    const unsigned max_depth = 800;
+    const unsigned max_depth = 600;
 
     depth = 0;
 
@@ -52,6 +52,8 @@ move agent::act(const state& s, const move& m )
         root.reset(new node(s, std::vector<state>(), m));
         root->expand(pn);
     }
+
+    dirichlet_noise();
 
     think();
 
@@ -203,9 +205,9 @@ void agent::dirichlet_noise()
 
 double agent::UCB1(const node* child, int N)
 {
-    int cpuct_base = 19652;
+    int cpuct_base = 10000;
     double cpuct = log((N + cpuct_base + 1) / cpuct_base) + c;
-    double Q = (child->n()) ? (child->t() / child->n()) : cpuct * child->move_prob();
+    double Q = (child->n()) ? (child->t() / child->n()) : 0.8;
     return Q + (cpuct * child->move_prob() * sqrt(N) / ((double)child->n() + 1));
 
     /*
