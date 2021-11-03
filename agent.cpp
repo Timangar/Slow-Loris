@@ -205,17 +205,10 @@ void agent::dirichlet_noise()
 
 double agent::UCB1(const node* child, int N)
 {
-    int cpuct_base = 10000;
+    int cpuct_base = 19000;
     double cpuct = log((N + cpuct_base + 1) / cpuct_base) + c;
-    double Q = (child->n()) ? (child->t() / child->n()) : 0.8;
+    double Q = (child->n()) ? (child->t() / child->n()) : 1.1;
     return Q + (cpuct * child->move_prob() * sqrt(N) / ((double)child->n() + 1));
-
-    /*
-	if (child->n())
-		return child->t() / ((double)child->n() + (double)child->o()) + c * child->move_prob() * sqrt(log(N) / ((double)child->n() + (double)child->o()));
-	else
-		return c * child->move_prob();
-    */
 }
 
 unsigned agent::select(node* parent)
@@ -335,47 +328,3 @@ torch::Tensor agent::position_convert(const state& s)
 
     return x;
 }
-
-/*
-//is this a leaf node?
-    if (!Node.children().size())
-        //yes: has it been visited before ?
-    {
-        if (Node.n())
-            //yes: expand and evaluate best child (or
-        {
-            if (Node.terminal())                //check if terminal state and node cannot be expanded
-                return Node.score();
-            else
-                evaluation = expand(Node);
-        }
-        else
-            //no: is another thread currently running on this node?
-        {
-            if (workers_as_entering >= 2)
-                //yes: expand and evaluate best child
-            {
-                if (Node.terminal())                //check if terminal state and node cannot be expanded
-                    return Node.score();
-                evaluation = expand(Node);
-            }
-            else
-                //no: evaluate this node
-            {
-                evaluation = eval(Node);
-            }
-        }
-    }
-    else
-        //no: pick the best child node to examine
-    {
-        evaluation = mcts_step(Node.children()[select(Node)]);
-    }
-
-    //backpropagate
-    //the evaluation has to be flipped. a black node with white winning needs val -x, with black winning x and vice versa.
-    Node.increment_t(-evaluation * Node.color());
-    Node.increment_n();
-    Node.decrement_o();
-    return evaluation;
-*/

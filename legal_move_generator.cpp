@@ -72,6 +72,10 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 				s.terminal_state = true;
 				s.score = 0;
 			}
+			if (history.size() > 150) {
+				s.terminal_state = true;
+				s.score = 0;
+			}
 		}
 
 		//check whether the move affects castling rights
