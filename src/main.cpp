@@ -1,8 +1,12 @@
+#pragma once
 #include "perft.h"
 #include "play.h"
+#include "valnet.h"
+#include "polnet.h"
 
 
 int main(void)
 {
-	play();
+	train(10000, 1, 0.2f, 1.0f);
+	//play();
 }

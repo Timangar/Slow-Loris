@@ -12,9 +12,15 @@ void input(chess_environment* env, agent& loris)
     turn = env->get_state().turn;
     if (turn == color)
         env->player_input();
-
+        //env->agent_input(loris.act(env->get_state()));
     else
         env->agent_input(loris.act(env->get_state()));
+}
+
+void render(chess_environment* env)
+{
+    while (render)
+        env->render();
 }
 
 void play()
@@ -22,7 +28,9 @@ void play()
     using namespace std::literals::chrono_literals;
 
     chess_environment* env = new chess_environment;
-    agent loris;
+    agent loris(true);
+
+    bool render = true;
     while (!glfwWindowShouldClose(env->get_window()))
     {
         static bool print = true;
@@ -48,4 +56,6 @@ void play()
             input(env, loris);
         env->render();
     }
+    render = false;
+    delete env;
 }

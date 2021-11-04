@@ -13,7 +13,7 @@ protected:
 	bool sonderkonform(int pin_line, int dest, bool check); //easter egg for all german code stealers
 	int get_pin_line(int i_pos); //returns the index of the pin line that pins the piece. -1 if not pinned.
 
-	void king_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool cq, bool ck);
+	void king_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool cq, bool ck, bool check);
 	void bishop_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool check);
 	void knight_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool check);
 	void rook_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& position, bool check);

@@ -8,8 +8,16 @@ legal_move_generator::legal_move_generator() : attacked_squares{ 0 } {}
 void legal_move_generator::gen(state& s, move m, const std::vector<state>& history, bool init)
 {
 	if (!init) {
+		//legacy code replacement: the state color used to be changed in this function.
+		//now it is changed right before. s.turn must be replaced by "previous_turn" and "s.turn" = current respectively.
+		int previous_turn = s.turn * -1;
+
 		init = true;
 		bool increment_fifty_move_count = true;
+
+		if (m.castle)
+			increment_fifty_move_count = false;
+
 		//make normal part of move
 		//-------------------------
 		//check if move is a captures
@@ -17,7 +25,7 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 			increment_fifty_move_count = false;
 		//check for promotion, because the piece type has to be changed
 		if (m.promotion)
-			s.position[m.destination] = {2, s.turn};
+			s.position[m.destination] = {2, previous_turn};
 		else
 			s.position[m.destination] = s.position[m.origin];
 		s.position[m.origin] = piece();
@@ -46,13 +54,25 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 		}
 		else
 			s.fifty_move_count = 0;
+		/*
+		if (history.size() < 4)
+			if (s.fifty_move_count != history.size()) {
+				tools tool;
+				tool.log_state(s);
+				__debugbreak();
+			}
+		*/
 		//threefold repetition
 		if (history.size() > 4) {
-			for (unsigned int i = 4; i <= s.fifty_move_count; i += 2) {
+			for (int i = 4; i <= s.fifty_move_count && i <= history.size(); i++) {
 				if (history[(history.size() - i)] == s)
 					s.repetition_count = history[history.size() - 1].repetition_count + 1;
 			}
-			if (s.repetition_count >= 3) {
+			if (s.repetition_count >= 4) {
+				s.terminal_state = true;
+				s.score = 0;
+			}
+			if (history.size() > 150) {
 				s.terminal_state = true;
 				s.score = 0;
 			}
@@ -63,12 +83,12 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 		//king move:
 		if (s.position[m.destination].get_type() == 1)
 		{
-			if (s.turn == BLACK) {
+			if (previous_turn == BLACK) {
 				s.castling_b_k = false;
 				s.castling_b_q = false;
 				s.pos_bk = m.destination;
 			}
-			else if (s.turn == WHITE) {
+			else if (previous_turn == WHITE) {
 				s.castling_w_k = false;
 				s.castling_w_q = false;
 				s.pos_wk = m.destination;
@@ -140,13 +160,13 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 
 		//handle if the last move was an en passant capture
 		if (m.en_passant) {
-			if (s.turn == WHITE)
+			if (previous_turn == WHITE)
 				s.position[m.destination + 8] = piece();
-			else if (s.turn == BLACK)
+			else if (previous_turn == BLACK)
 				s.position[m.destination - 8] = piece();
 		}
 
-		s.turn = s.turn * -1;
+		// here used to be: s.turn = s.turn * -1; ---> everything before is "previous turn", after is "s.turn"
 	}
 	//create a map of all the squares attacked by enemy pieces
 	//create a map per x-ray to the king to determine pins
@@ -183,14 +203,14 @@ void legal_move_generator::gen(state& s, move m, const std::vector<state>& histo
 		else
 			continue;
 
-		int i_rank = floor(i / 8);
+		int i_rank = (int)floor(i / 8);
 		int i_file = i - i_rank * 8;
 
 		//treat every piece differently
 		switch (opponent.get_type())
 		{
 		case 1:
-			king_moves(i_rank, i_file, s.turn, s.position, ck, cq);
+			king_moves(i_rank, i_file, s.turn, s.position, ck, cq, check);
 			break;
 		case 2:
 			bishop_moves(i_rank, i_file, s.turn, s.position, check);
@@ -237,7 +257,7 @@ void legal_move_generator::gen_opponent_data(int king_pos, int opponent_color, c
 		else
 			continue;
 
-		int i_rank = floor(i / 8);
+		int i_rank = (int)floor(i / 8);
 		int i_file = i - i_rank * 8;
 
 		//treat every piece differently
@@ -274,7 +294,7 @@ void legal_move_generator::gen_opponent_data(int king_pos, int opponent_color, c
 		if (v.empty())
 			continue;
 		int obst_count = -1;
-		for (int j = 0; j < v.get_size(); j++)
+		for (unsigned j = 0; j < v.get_size(); j++)
 			if (position[v.get_data()[j]].get_color())
 				obst_count++;
 		if (obst_count == 1)
@@ -302,7 +322,7 @@ void legal_move_generator::gen_opponent_data(int king_pos, int opponent_color, c
 				int same_color_count = -1;	//exactly one of them has to have the same color as the x_ray piece
 				if (floor(v.back() / 8) != ep_rank)
 					continue;
-				for (int j = 0; j < v.get_size(); j++) {
+				for (unsigned j = 0; j < v.get_size(); j++) {
 					if (position[v.get_data()[j]].get_color()) {
 						obst_count++;
 						if (position[v.get_data()[j]].get_type() == 6)
@@ -362,7 +382,8 @@ int legal_move_generator::get_pin_line(int i_pos)
 	return -1;
 }
 
-void legal_move_generator::king_moves(int i_rank, int i_file, int color, const std::array<piece, 64>& pos, bool ck, bool cq)
+void legal_move_generator::king_moves(int i_rank, int i_file, int color,
+	const std::array<piece, 64>& pos, bool ck, bool cq, bool check)
 {
 	int i = i_rank * RANK + i_file;
 	if (i_rank && !attacked_squares[i - RANK] && pos[i - RANK].get_color() != color)
@@ -386,19 +407,22 @@ void legal_move_generator::king_moves(int i_rank, int i_file, int color, const s
 	int rank = 0;
 	if (color == WHITE)
 		rank = 7;
-	if (ck)
+	if (!check) 
 	{
-		if (!attacked_squares[rank * RANK + 5])
-			if (!attacked_squares[rank * RANK + 6])
-				if (!pos[rank * RANK + 5].get_color())
-					if (!pos[rank * RANK + 6].get_color())
-						legal_moves.push_back({ i, rank * RANK + 6, true });
-	}
-	if (cq)
-	{
-		if (!attacked_squares[rank * RANK + 2] && !attacked_squares[rank * RANK + 3]
-			&& !pos[rank * RANK + 2].get_color() && !pos[rank * RANK + 3].get_color())
-			legal_moves.push_back({ i, rank * RANK + 2, true });
+		if (ck)
+		{
+			if (!attacked_squares[rank * RANK + 5])
+				if (!attacked_squares[rank * RANK + 6])
+					if (!pos[rank * (int)RANK + 5].get_color())
+						if (!pos[rank * (int)RANK + 6].get_color())
+							legal_moves.push_back({ i, rank * RANK + 6, true });
+		}
+		if (cq)
+		{
+			if (!attacked_squares[rank * RANK + 2] && !attacked_squares[rank * RANK + 3]
+				&& !pos[rank * (int)RANK + 2].get_color() && !pos[rank * (int)RANK + 3].get_color())
+				legal_moves.push_back({ i, rank * RANK + 2, true });
+		}
 	}
 }
 
@@ -624,7 +648,7 @@ void legal_move_generator::pawn_moves(int i_rank, int i_file, int color, const s
 	if (i_rank == start_rank) {
 		dest = i + 2 * direction * RANK;
 		if (sonderkonform(pinline, dest, check))
-			if (!position[dest].get_color() && !position[i + direction * RANK].get_color()) //can't jump over pieces
+			if (!position[dest].get_color() && !position[i + direction * (int)RANK].get_color()) //can't jump over pieces
 				legal_moves.push_back({ i, dest });
 	}
 	//capture left
@@ -693,7 +717,7 @@ void legal_move_generator::opponent_rook_data(int i_rank, int i_file, int king_p
 			if (king_pos == dest) {
 				check_line = x_ray;
 				check_line.back() = i_rank * 8 + i_file;
-				if (rank);
+				if (rank)
 					attacked_squares[dest - RANK] = true; //king can't escape backwards
 				push_check_line(check_line);
 				break;

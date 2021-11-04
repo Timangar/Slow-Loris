@@ -26,6 +26,7 @@ void chess_environment::step(move m)
 {
     if (current_state.contains(m) && !current_state.terminal_state) {
         history.push_back(current_state);
+        current_state.turn *= -1;
         gen.gen(current_state, m, history);
     }
     else
@@ -36,18 +37,21 @@ void chess_environment::reset()
 {
 	history.clear();
 	current_state = state(start_fen);
+    gen.gen(current_state, { 0,0 }, history, true);
 }
 
 void chess_environment::set(const state& state) //TODO: test the copy constructor
 {
 	reset();
 	current_state = state;
+    gen.gen(current_state, { 0,0 }, history, true);
 }
 
 void chess_environment::set(std::string fen)
 {
 	reset();
 	current_state = state(fen);
+    gen.gen(current_state, { 0,0 }, history, true);
 }
 
 void chess_environment::unmake_move()
