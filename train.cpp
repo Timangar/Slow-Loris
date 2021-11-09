@@ -6,9 +6,9 @@
 void train(int epochs, int render_intervall, float epsilon, float decay)
 {
 	chess_environment* env = new chess_environment;
-	agent* loris = new agent(true, 2.5, 0.01);
+	agent* loris = new agent(true, 2.5, 0.001);
 
-	for (unsigned epoch = 1900; epoch < epochs; epoch++)
+	for (unsigned epoch = 0; epoch < epochs; epoch++)
 	{
 		//env->set("3qk3/8/8/8/8/8/8/4K3 w - - 0 1");
 		env->reset();
@@ -34,7 +34,7 @@ void train(int epochs, int render_intervall, float epsilon, float decay)
 			for (piece p : env->get_state().position)
 				score += values[p.get_type()] * p.get_color();
 
-			score = 0.3f * tanh(score);
+			score = tanh(score);
 		}
 
 		auto end = std::chrono::high_resolution_clock::now();

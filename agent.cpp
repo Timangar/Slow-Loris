@@ -145,6 +145,7 @@ move agent::train_act(const state& s, std::vector<state> history, const move& m)
 {
     //this function replaces "act" during training and involves making random moves. 
     //as it is used exclusively in self play, the reassignment in the end is deleted
+    //the reassignment in the beginning is enforced to prevent memory overflow
 
     //check if state is already in calculation
     bool reassign = true; // !root->inherit(s);
@@ -207,8 +208,8 @@ double agent::UCB1(const node* child, int N)
 {
     int cpuct_base = 19000;
     double cpuct = log((N + cpuct_base + 1) / cpuct_base) + c;
-    double Q = (child->n()) ? (child->t() / child->n()) : 1.1;
-    return Q + (cpuct * child->move_prob() * sqrt(N) / ((double)child->n() + 1));
+    double Q = (child->n()) ? (child->t() / (child->n() + child->o())) : 1.1;
+    return Q + (cpuct * child->move_prob() * sqrt(N) / ((double)child->n() + child->o() + 1));
 }
 
 unsigned agent::select(node* parent)
