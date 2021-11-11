@@ -28,7 +28,7 @@ agent::~agent()
 void agent::think()
 {
     //determine max depth and number of threads
-    const unsigned n_threads = 4;
+    const unsigned n_threads = 1;
     const unsigned max_depth = 600;
 
     depth = 0;
@@ -286,12 +286,12 @@ void agent::mcts(unsigned max_depth)
 double agent::eval(const node* Node) //return a positive value if white is winning, a negative value if black is winning
 {
     //return terminal state value if available
-    dv.lock();
     //otherwise, predict and convert to double
     double returnval = (Node->terminal()) ? (double)Node->score() : 
         vn->forward(Node->current()).item<double>() * Node->color();
 
     //an evaluation marks a full playout. increment depth here.
+    dv.lock();
     depth++;
     dv.unlock();
 

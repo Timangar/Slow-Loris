@@ -2,12 +2,12 @@
 
 polnetImpl::polnetImpl() :
 	device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU),
-	c1(register_module("c1", torch::nn::Conv2d(6, 64, 4))),
-	c2(register_module("c2", torch::nn::Conv2d(64, 64, 5))),
+	c1(register_module("c1", torch::nn::Conv2d(6, 128, 4))),
+	c2(register_module("c2", torch::nn::Conv2d(128, 128, 5))),
 	flatten(register_module("flatten", torch::nn::Flatten())),
-	fc1(register_module("fc1", torch::nn::Linear(64, 32))),
-	fc2(register_module("fc2", torch::nn::Linear(32, 32))),
-	fc3(register_module("fc3", torch::nn::Linear(32, 1792)))
+	fc1(register_module("fc1", torch::nn::Linear(128, 128))),
+	fc2(register_module("fc2", torch::nn::Linear(128, 128))),
+	fc3(register_module("fc3", torch::nn::Linear(128, 1792)))
 {}
 
 torch::Tensor polnetImpl::forward(const state & s)
@@ -38,12 +38,12 @@ torch::Tensor polnetImpl::forward(const state & s)
                     x[0][ptype - 1][7 - i][7 - j] = -pcolor;
             }
 
-    x = torch::relu(c1(x));
-    x = flatten(torch::relu(c2(x)));
-    x = torch::relu(fc1(x));
-    x = torch::relu(fc2(x));
-    x = fc3(x);
-    x = torch::softmax(x.view(1792), 0);
+    x = torch::relu(c1(x.contiguous()));
+    x = flatten(torch::relu(c2(x.contiguous())));
+    x = torch::relu(fc1(x.contiguous()));
+    x = torch::relu(fc2(x.contiguous()));
+    x = fc3(x.contiguous());
+    x = torch::softmax(x.contiguous().view(1792), 0);
 
     torch::Tensor ret = disc.discriminate(x, s, device);
 
