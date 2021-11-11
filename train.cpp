@@ -6,7 +6,7 @@
 void train(int epochs, int render_intervall, float epsilon, float decay)
 {
 	chess_environment* env = new chess_environment;
-	agent* loris = new agent(true, 2.5, 0.00001);
+	agent* loris = new agent(false, 2.5, 0.0001);
 
 	for (unsigned epoch = 0; epoch < epochs; epoch++)
 	{
@@ -40,10 +40,9 @@ void train(int epochs, int render_intervall, float epsilon, float decay)
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::seconds> (end - begin);
 
+		loris->train(score);
 		std::cout << "epoch: " << epoch << std::endl
 			<< "winner: " << score << std::endl
 			<< "elapsed time: " << duration.count() << std::endl << std::endl;
-
-		loris->train(score);
 	}
 }

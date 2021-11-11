@@ -22,7 +22,7 @@ torch::Tensor polnetImpl::forward(const state & s)
     if (s.turn == 1)
         for (unsigned i = 0; i < 8; i++)
             for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[(float)i * 8 + j];
+                piece p = s.position[i * 8 + j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)
@@ -31,7 +31,7 @@ torch::Tensor polnetImpl::forward(const state & s)
     else
         for (unsigned i = 0; i < 8; i++)
             for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[(float)i * 8 + j];
+                piece p = s.position[i * 8 + j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)

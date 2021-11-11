@@ -12,7 +12,6 @@ agent::agent(bool load, double c, double learning_rate, std::string fen)
         torch::load(vn, "valnet.pt");
         torch::load(pn, "polnet.pt");
     }
-    
     vn->to(device);
     pn->to(device);
     val_adam = new torch::optim::Adam(vn->parameters(), torch::optim::AdamOptions(learning_rate));
@@ -28,9 +27,10 @@ agent::~agent()
 void agent::think()
 {
     //determine max depth and number of threads
-    const unsigned n_threads = 1;
+    const unsigned n_threads = 8;
     const unsigned max_depth = 600;
 
+    //reset current depth before search
     depth = 0;
 
     //start threads here
@@ -84,7 +84,7 @@ void agent::train(float target)
     //stack the recorded positions into batch
     torch::Tensor inputs = torch::stack(positions);
     inputs.to(device);
-    std::cout << inputs.sizes() << std::endl;
+    std::cout << inputs.sizes()[0] << std::endl;
 
     //valnet
     // 
@@ -102,6 +102,7 @@ void agent::train(float target)
     x_val.to(device);
     torch::Tensor loss_val = torch::mse_loss(x_val, y_val);
     loss_val.to(device);
+    std::cout << "value loss: " << loss_val.mean() << std::endl;
     loss_val.backward();
     val_adam->step();
 
@@ -308,15 +309,15 @@ void agent::mcts(unsigned max_depth)
 
 double agent::eval(const node* Node) //return a positive value if white is winning, a negative value if black is winning
 {
-    //return terminal state value if available
-    //otherwise, predict and convert to double
-    double returnval = (Node->terminal()) ? (double)Node->score() : 
-        vn->forward(Node->current()).item<double>() * Node->color();
-
     //an evaluation marks a full playout. increment depth here.
     dv.lock();
     depth++;
     dv.unlock();
+
+    //return terminal state value if available
+    //otherwise, predict and convert to double
+    double returnval = (Node->terminal()) ? (double)Node->score() : 
+        vn->forward(Node->current()).item<double>() * Node->color();
 
     //return neural net eval
     return returnval;
@@ -334,7 +335,7 @@ torch::Tensor agent::position_convert(const state& s)
     if (s.turn == 1)
         for (unsigned i = 0; i < 8; i++)
             for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[(int)i * (int)8 + (int)j];
+                piece p = s.position[i * 8 + j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)
@@ -343,7 +344,7 @@ torch::Tensor agent::position_convert(const state& s)
     else
         for (unsigned i = 0; i < 8; i++)
             for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[(int)i * (int)8 + (int)j];
+                piece p = s.position[i * 8 + j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)
