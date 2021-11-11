@@ -167,12 +167,35 @@ move agent::train_act(const state& s, std::vector<state> history, const move& m)
 
     think();
 
-    int highscore = 0;
-    for (unsigned i = 0; i < root->size(); i++) {
-        int score = root->get(i)->n();
-        if (highscore < score) {
-            highscore = score;
-            index = i;
+    //add extra exploration in first 15 moves by selecting moves at random (weighted by search)
+    //choose best move if move is above move 15 (30 half moves)
+    if (history.size() > 30) {
+        int highscore = 0;
+        for (unsigned i = 0; i < root->size(); i++) {
+            int score = root->get(i)->n();
+            if (highscore < score) {
+                highscore = score;
+                index = i;
+            }
+        }
+    }
+    else {
+        int sum = 0;
+        for (unsigned i = 0; i < root->size(); i++)
+            sum += root->get(i)->n();
+
+        std::random_device rnd;
+        std::default_random_engine gen(rnd());
+        std::uniform_int_distribution<> dist(0, sum - 1);
+        int choice = dist(gen);
+
+        for (unsigned i = 0; i < root->size(); i++) {
+            int prob = root->get(i)->n();
+            if (choice < prob) {
+                index = i;
+                break;
+            }
+            choice -= prob;
         }
     }
 
@@ -195,7 +218,7 @@ void agent::dirichlet_noise()
     float* noise = new float[size];
 
     for (unsigned i = 0; i < size; i++) {
-        noise[i] = root->get(i)->move_prob();
+        noise[i] = gamma(gen);
         sum += noise[i];
     }
     for (unsigned i = 0; i < size; i++)
