@@ -27,7 +27,7 @@ agent::~agent()
 void agent::think()
 {
     //determine max depth and number of threads
-    const unsigned n_threads = 8;
+    const unsigned n_threads = 4;
     const unsigned max_depth = 600;
 
     //reset current depth before search
@@ -102,9 +102,14 @@ void agent::train(float target)
     x_val.to(device);
     torch::Tensor loss_val = torch::mse_loss(x_val, y_val);
     loss_val.to(device);
-    std::cout << "value loss: " << loss_val.mean() << std::endl;
+    std::cout << "value loss: " << loss_val.mean().item<float>() << std::endl;
     loss_val.backward();
     val_adam->step();
+
+    //test for training efficiency
+    x_val = vn->forward(inputs);
+    loss_val = torch::mse_loss(x_val, y_val);
+    std::cout << "val loss after: " << loss_val.mean().item<float>() << std::endl;
 
     //polnet
     //
@@ -317,7 +322,7 @@ double agent::eval(const node* Node) //return a positive value if white is winni
     //return terminal state value if available
     //otherwise, predict and convert to double
     double returnval = (Node->terminal()) ? (double)Node->score() : 
-        vn->forward(Node->current()).item<double>() * Node->color();
+        vn->forward(Node->current()) * Node->color();
 
     //return neural net eval
     return returnval;
@@ -333,22 +338,22 @@ torch::Tensor agent::position_convert(const state& s)
 
     //take into account that the tensor must be rotated
     if (s.turn == 1)
-        for (unsigned i = 0; i < 8; i++)
-            for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[i * 8 + j];
+        for (int i = 0; i < 8; i++)
+            for (int j = 0; j < 8; j++) {
+                piece p = s.position[(size_t)i * (size_t)8 + (size_t)j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)
                     x[ptype - 1][i][j] = pcolor;
             }
     else
-        for (unsigned i = 0; i < 8; i++)
-            for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[i * 8 + j];
+        for (int i = 0; i < 8; i++)
+            for (int j = 0; j < 8; j++) {
+                piece p = s.position[(size_t)i * (size_t)8 + (size_t)j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)
-                    x[ptype - 1][7 - i][7 - j] = -pcolor;
+                    x[ptype - 1][(int64_t)7 - (int64_t)i][(int64_t)7 - (int64_t)j] = -pcolor;
             }
 
     return x;

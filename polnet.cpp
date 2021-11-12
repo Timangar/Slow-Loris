@@ -20,22 +20,22 @@ torch::Tensor polnetImpl::forward(const state & s)
 
     //take into account that the tensor must be rotated
     if (s.turn == 1)
-        for (unsigned i = 0; i < 8; i++)
-            for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[i * 8 + j];
+        for (int i = 0; i < 8; i++)
+            for (int j = 0; j < 8; j++) {
+                piece p = s.position[(size_t)i * (size_t)8 + (size_t)j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)
                     x[0][ptype - 1][i][j] = pcolor;
             }
     else
-        for (unsigned i = 0; i < 8; i++)
-            for (unsigned j = 0; j < 8; j++) {
-                piece p = s.position[i * 8 + j];
+        for (int i = 0; i < 8; i++)
+            for (int j = 0; j < 8; j++) {
+                piece p = s.position[(size_t)i * (size_t)8 + (size_t)j];
                 unsigned ptype = p.get_type();
                 int pcolor = p.get_color();
                 if (pcolor)
-                    x[0][ptype - 1][7 - i][7 - j] = -pcolor;
+                    x[0][ptype - 1][(int64_t)7 - (int64_t)i][(int64_t)7 - (int64_t)j] = -pcolor;
             }
 
     x = torch::relu(c1(x.contiguous()));

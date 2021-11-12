@@ -6,7 +6,7 @@
 void train(int epochs, int render_intervall, float epsilon, float decay)
 {
 	chess_environment* env = new chess_environment;
-	agent* loris = new agent(false, 2.5, 0.0001);
+	agent* loris = new agent(true, 2.5, 0.001);
 
 	for (unsigned epoch = 0; epoch < epochs; epoch++)
 	{
