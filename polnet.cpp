@@ -12,6 +12,7 @@ polnetImpl::polnetImpl() :
 
 torch::Tensor polnetImpl::forward(const state & s)
 {
+    torch::NoGradGuard no_grad;
     //set up the tensor from a given state
     torch::Tensor x = torch::zeros({ 1, 6, 8, 8 }, device).contiguous();
 
@@ -37,7 +38,7 @@ torch::Tensor polnetImpl::forward(const state & s)
                 if (pcolor)
                     x[0][ptype - 1][(int64_t)7 - (int64_t)i][(int64_t)7 - (int64_t)j] = -pcolor;
             }
-
+    try {
     x = torch::relu(c1(x.contiguous()));
     x = flatten(torch::relu(c2(x.contiguous())));
     x = torch::relu(fc1(x.contiguous()));
@@ -48,6 +49,10 @@ torch::Tensor polnetImpl::forward(const state & s)
     torch::Tensor ret = disc.discriminate(x, s, device);
 
     return ret;
+    }
+    catch (const c10::Error e) {
+        std::cerr << std::endl << "ERROR::POLNET: RACE CONDITION" << std::endl << std::endl;
+    }
 }
 
 torch::Tensor polnetImpl::forward(torch::Tensor x)

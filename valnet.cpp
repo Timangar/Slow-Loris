@@ -24,6 +24,7 @@ torch::Tensor valnetImpl::forward(torch::Tensor x)
 
 double valnetImpl::forward(const state& s)
 {
+    torch::NoGradGuard no_grad;
     //set up the tensor from a given state
     torch::Tensor x = torch::zeros({ 1, 6, 8, 8 }, device).contiguous();
 
@@ -59,6 +60,6 @@ double valnetImpl::forward(const state& s)
     return x.item<double>();
     }
     catch (const c10::Error e) {
-        std::cerr << std::endl << "ERROR: RACE CONDITION" << std::endl << std::endl;
+        std::cerr << std::endl << "ERROR::VALNET: RACE CONDITION" << std::endl << std::endl;
     }
 }

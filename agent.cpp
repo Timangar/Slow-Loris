@@ -86,36 +86,14 @@ void agent::train(float target)
     inputs.to(device);
     std::cout << inputs.sizes()[0] << std::endl;
 
-    //valnet
-    // 
-    //generate target batch from score
-    val_adam->zero_grad();
-
+    //generate value target batch from score
     torch::Tensor y_val = torch::ones({ (long long)positions.size(), 1 }, device);
     y_val *= target;
     for (unsigned i = 1; i < positions.size(); i += 2) {  //we have to switch the result for all the black turns
         y_val[i] *= -1;
     }
 
-    //train using mean squared error
-    torch::Tensor x_val = vn->forward(inputs);
-    x_val.to(device);
-    torch::Tensor loss_val = torch::mse_loss(x_val, y_val);
-    loss_val.to(device);
-    std::cout << "value loss: " << loss_val.mean().item<float>() << std::endl;
-    loss_val.backward();
-    val_adam->step();
-
-    //test for training efficiency
-    x_val = vn->forward(inputs);
-    loss_val = torch::mse_loss(x_val, y_val);
-    std::cout << "val loss after: " << loss_val.mean().item<float>() << std::endl;
-
-    //polnet
-    //
-    //generate target batch from played moves
-    pol_adam->zero_grad();
-
+    //generate policy target batch from played moves
     mdis finder;
     auto y_options = torch::TensorOptions().dtype(torch::kInt64).device(torch::kCUDA, 0);
     torch::Tensor y_pol = torch::empty({ (int)played_moves.size() }, y_options);
@@ -126,16 +104,45 @@ void agent::train(float target)
             y_pol.index_put_({ i }, (long)finder.find(played_moves[i]));
     }
 
-    //generate predictions
-    torch::Tensor x_pol = pn->forward(inputs);
-    x_pol.to(device);
+    for (int t_epoch = 1; t_epoch <= 2; t_epoch++)
+    {
+        //valnet
+        //----------------------------------------
+        val_adam->zero_grad();
 
-    //train using cross entropy loss
-    torch::Tensor loss_pol = torch::cross_entropy_loss(x_pol, y_pol);
-    loss_pol.backward();
-    pol_adam->step();
+        //train using mean squared error
+        torch::Tensor x_val = vn->forward(inputs);
+        x_val.to(device);
+        torch::Tensor loss_val = torch::mse_loss(x_val, y_val);
+        loss_val.to(device);
+        std::cout << "val loss #" << t_epoch << ": " << loss_val.mean().item<float>() << std::endl;
+        loss_val.backward();
+        val_adam->step();
+
+        //test for training efficiency
+        x_val = vn->forward(inputs);
+        loss_val = torch::mse_loss(x_val, y_val);
+        std::cout << "val loss after: " << loss_val.mean().item<float>() << std::endl;
+
+        //polnet
+        //-------------------------
+        pol_adam->zero_grad();
+
+        //generate predictions
+        torch::Tensor x_pol = pn->forward(inputs);
+        x_pol.to(device);
+
+        //train using cross entropy loss
+        torch::Tensor loss_pol = torch::cross_entropy_loss(x_pol, y_pol);
+        std::cout << "pol loss #" << t_epoch << ": " << loss_pol.mean().item<float>() << std::endl;
+        loss_pol.backward();
+        pol_adam->step();
+    }
 
     //reset everything
+    pn->zero_grad();
+    vn->zero_grad();
+
     played_moves.clear();
     positions.clear();
 
