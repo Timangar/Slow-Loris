@@ -97,6 +97,7 @@ bool node::inherit(unsigned index)
 void node::expand(polnet pn)
 {
 	std::lock_guard<std::mutex> l(lock);
+	torch::NoGradGuard no_grad;
 	if (!_expanded) {
 		if (!_current.terminal_state && !_size) { //it is possible that the pos is already evaluated if reassignment has happened
 			//calculate possible moves
@@ -116,7 +117,13 @@ void node::expand(polnet pn)
 			//calculate move probabilities
 			torch::Tensor probs = pn->forward(_current);
 			for (int i = 0; i < _size; i++) {
-				double m_prob = probs.index({ i }).item<double>();
+				double m_prob;
+				try {
+					m_prob = probs.index({ i }).item<double>();
+				}
+				catch (const c10::Error e) {
+					std::cerr << "ERROR::NODE: RACE CONDITION";
+				}
 				intermediate[i] = { this, _current.legal_moves[i], m_prob };
 			}
 			_children.reset(intermediate);

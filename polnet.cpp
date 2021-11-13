@@ -5,9 +5,9 @@ polnetImpl::polnetImpl() :
 	c1(register_module("c1", torch::nn::Conv2d(6, 128, 4))),
 	c2(register_module("c2", torch::nn::Conv2d(128, 128, 5))),
 	flatten(register_module("flatten", torch::nn::Flatten())),
-	fc1(register_module("fc1", torch::nn::Linear(128, 128))),
-	fc2(register_module("fc2", torch::nn::Linear(128, 128))),
-	fc3(register_module("fc3", torch::nn::Linear(128, 1792)))
+	fc1(register_module("fc1", torch::nn::Linear(128, 512))),
+	fc2(register_module("fc2", torch::nn::Linear(512, 1024))),
+	fc3(register_module("fc3", torch::nn::Linear(1024, 1792)))
 {}
 
 torch::Tensor polnetImpl::forward(const state & s)
@@ -48,10 +48,11 @@ torch::Tensor polnetImpl::forward(const state & s)
 
     torch::Tensor ret = disc.discriminate(x, s, device);
 
-    return ret;
+    return ret.detach();
     }
     catch (const c10::Error e) {
         std::cerr << std::endl << "ERROR::POLNET: RACE CONDITION" << std::endl << std::endl;
+        std::cerr << e.what() << std::endl;
     }
 }
 

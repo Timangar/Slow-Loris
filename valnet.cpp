@@ -57,6 +57,8 @@ double valnetImpl::forward(const state& s)
         x = torch::relu(fc2(x));
         x = torch::tanh(fc3(x));
 
+        x = x.detach();
+
     return x.item<double>();
     }
     catch (const c10::Error e) {

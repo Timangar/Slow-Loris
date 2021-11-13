@@ -69,7 +69,6 @@ move agent::act(const state& s, const move& m )
    
     //make root the chosen child
     move action = root->get(index)->action();
-    played_moves.push_back(action);
     root->inherit(index);
 
     return action;
@@ -94,15 +93,7 @@ void agent::train(float target)
     }
 
     //generate policy target batch from played moves
-    mdis finder;
-    auto y_options = torch::TensorOptions().dtype(torch::kInt64).device(torch::kCUDA, 0);
-    torch::Tensor y_pol = torch::empty({ (int)played_moves.size() }, y_options);
-    for (int i = 0; i < played_moves.size(); i++) {
-        if (!(i % 2))
-            y_pol.index_put_({ i }, (long)finder.find(played_moves[i]));
-        else
-            y_pol.index_put_({ i }, (long)finder.inverse_find(played_moves[i]));
-    }
+    torch::Tensor y_pol = torch::stack(search_results);
 
     for (int t_epoch = 1; t_epoch <= 2; t_epoch++)
     {
@@ -138,7 +129,7 @@ void agent::train(float target)
     pn->zero_grad();
     vn->zero_grad();
 
-    played_moves.clear();
+    search_results.clear();
     positions.clear();
 
     pn->eval();
@@ -177,7 +168,7 @@ move agent::train_act(const state& s, std::vector<state> history, const move& m)
 
     //add extra exploration in first 15 moves by selecting moves at random (weighted by search)
     //choose best move if move is above move 15 (30 half moves)
-    if (history.size() > 30) {
+    if (history.size() > 20) {
         int highscore = 0;
         for (unsigned i = 0; i < root->size(); i++) {
             int score = root->get(i)->n();
@@ -207,9 +198,20 @@ move agent::train_act(const state& s, std::vector<state> history, const move& m)
         }
     }
 
+    //create target for pnet from search results
+    mdis finder;
+    torch::Tensor sr = torch::zeros({ 1792 });
+    for (int i = 0; i < root->size(); i++) {
+        int index = (root->color() == 1) ? 
+            finder.find(root->get(i)->action()) : 
+            finder.inverse_find(root->get(i)->action());
+        sr[index] = root->get(i)->n();
+    }
+    sr = torch::softmax(sr, 0);
+    search_results.push_back(sr);
+
     //make root the chosen child
     move action = root->get(index)->action();
-    played_moves.push_back(action);
 
     return action;
 }
@@ -316,6 +318,7 @@ void agent::mcts(unsigned max_depth)
 
 double agent::eval(const node* Node) //return a positive value if white is winning, a negative value if black is winning
 {
+    torch::NoGradGuard no_grad;
     //an evaluation marks a full playout. increment depth here.
     dv.lock();
     depth++;
@@ -360,3 +363,20 @@ torch::Tensor agent::position_convert(const state& s)
 
     return x;
 }
+
+
+
+
+
+
+/*
+    mdis finder;
+    auto y_options = torch::TensorOptions().dtype(torch::kInt64).device(torch::kCUDA, 0);
+    torch::Tensor y_pol = torch::empty({ (int)played_moves.size() }, y_options);
+    for (int i = 0; i < played_moves.size(); i++) {
+        if (!(i % 2))
+            y_pol.index_put_({ i }, (long)finder.find(played_moves[i]));
+        else
+            y_pol.index_put_({ i }, (long)finder.inverse_find(played_moves[i]));
+    }
+*/

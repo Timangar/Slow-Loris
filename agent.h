@@ -28,7 +28,7 @@ private:
 
 	std::mutex dv;								//to savely increment depth
 
-	std::vector<move> played_moves;				//the played moves for training the polnet (targets)
+	std::vector<torch::Tensor> search_results;	//the played moves for training the polnet (targets)
 	std::vector<torch::Tensor> positions;		//the played positions for training the neural nets (inputs)
 
 	void dirichlet_noise();						//to ensure exploration, the root is multiplied by dirichlet noise
