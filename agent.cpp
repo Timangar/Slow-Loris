@@ -99,9 +99,9 @@ void agent::train(float target)
     torch::Tensor y_pol = torch::empty({ (int)played_moves.size() }, y_options);
     for (int i = 0; i < played_moves.size(); i++) {
         if (!(i % 2))
-            y_pol.index_put_({ i }, (long)finder.inverse_find(played_moves[i]));
-        else
             y_pol.index_put_({ i }, (long)finder.find(played_moves[i]));
+        else
+            y_pol.index_put_({ i }, (long)finder.inverse_find(played_moves[i]));
     }
 
     for (int t_epoch = 1; t_epoch <= 2; t_epoch++)
@@ -118,11 +118,6 @@ void agent::train(float target)
         std::cout << "val loss #" << t_epoch << ": " << loss_val.mean().item<float>() << std::endl;
         loss_val.backward();
         val_adam->step();
-
-        //test for training efficiency
-        x_val = vn->forward(inputs);
-        loss_val = torch::mse_loss(x_val, y_val);
-        std::cout << "val loss after: " << loss_val.mean().item<float>() << std::endl;
 
         //polnet
         //-------------------------
