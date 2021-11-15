@@ -18,7 +18,7 @@ public:
 	bool inherit(state s);				//absorb the branch of one of the child nodes, delete rest of tree, returns true if successful
 	bool inherit(unsigned index);		//inherit based on index, returns true if successful
 
-	void expand(polnet pn);
+	void expand();
 
 	bool expanded() const;
 

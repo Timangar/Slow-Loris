@@ -13,7 +13,7 @@ valnetImpl::valnetImpl() :
 
 torch::Tensor valnetImpl::forward(torch::Tensor x)
 {
-    x = torch::relu(c1(x.contiguous()));
+    x = torch::relu(c1(x));
     x = flatten(torch::relu(c2(x)));
     x = torch::relu(fc1(x));
     x = torch::relu(fc2(x));

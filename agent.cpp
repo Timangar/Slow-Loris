@@ -8,27 +8,22 @@ std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN
 
 agent::agent(bool load, double c, double learning_rate, std::string fen)
     : c(c), root(new node), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU), depth(0) {
-    if (load) {
+    if (load)
         torch::load(vn, "valnet.pt");
-        torch::load(pn, "polnet.pt");
-    }
     vn->to(device);
-    pn->to(device);
     val_adam = new torch::optim::Adam(vn->parameters(), torch::optim::AdamOptions(learning_rate));
-    pol_adam = new torch::optim::Adam(pn->parameters(), torch::optim::AdamOptions(learning_rate));
 }
 
 agent::~agent()
 {
     delete val_adam;
-    delete pol_adam;
 }
 
 void agent::think()
 {
     //determine max depth and number of threads
     const unsigned n_threads = 4;
-    const unsigned max_depth = 600;
+    const unsigned max_depth = 800;
 
     //reset current depth before search
     depth = 0;
@@ -50,7 +45,7 @@ move agent::act(const state& s, const move& m )
     bool reassign = !root->inherit(s);
     if (reassign) {
         root.reset(new node(s, std::vector<state>(), m));
-        root->expand(pn);
+        root->expand();
     }
 
     dirichlet_noise();
@@ -77,13 +72,13 @@ move agent::act(const state& s, const move& m )
 void agent::train(float target)
 {   
     //set both networks to training mode
-    pn->train();
+    //pn->train();
     vn->train();
 
     //stack the recorded positions into batch
     torch::Tensor inputs = torch::stack(positions);
     inputs.to(device);
-    std::cout << inputs.sizes()[0] << std::endl;
+    std::cout << "game length: " << inputs.sizes()[0] << std::endl;
 
     //generate value target batch from score
     torch::Tensor y_val = torch::ones({ (long long)positions.size(), 1 }, device);
@@ -93,7 +88,7 @@ void agent::train(float target)
     }
 
     //generate policy target batch from played moves
-    torch::Tensor y_pol = torch::stack(search_results);
+    //torch::Tensor y_pol = torch::stack(search_results).to(device);
 
     for (int t_epoch = 1; t_epoch <= 2; t_epoch++)
     {
@@ -111,7 +106,7 @@ void agent::train(float target)
         val_adam->step();
 
         //polnet
-        //-------------------------
+        /*------------------------ -
         pol_adam->zero_grad();
 
         //generate predictions
@@ -123,21 +118,22 @@ void agent::train(float target)
         std::cout << "pol loss #" << t_epoch << ": " << loss_pol.mean().item<float>() << std::endl;
         loss_pol.backward();
         pol_adam->step();
+        */
     }
 
     //reset everything
-    pn->zero_grad();
+    //pn->zero_grad();
     vn->zero_grad();
 
-    search_results.clear();
+    //search_results.clear();
     positions.clear();
 
-    pn->eval();
+    //pn->eval();
     vn->eval();
     
     //save the parameters
     torch::save(vn, "valnet.pt");
-    torch::save(pn, "polnet.pt");
+    //torch::save(pn, "polnet.pt");
 }
 
 move agent::train_act(const state& s, std::vector<state> history, const move& m)
@@ -150,7 +146,7 @@ move agent::train_act(const state& s, std::vector<state> history, const move& m)
     bool reassign = true; // !root->inherit(s);
     if (reassign) {
         root.reset(new node(s, history, m));
-        root->expand(pn);
+        root->expand();
     }
 
     //the index of the move which will be chosen
@@ -199,16 +195,18 @@ move agent::train_act(const state& s, std::vector<state> history, const move& m)
     }
 
     //create target for pnet from search results
+    /*
     mdis finder;
     torch::Tensor sr = torch::zeros({ 1792 });
     for (int i = 0; i < root->size(); i++) {
         int index = (root->color() == 1) ? 
             finder.find(root->get(i)->action()) : 
             finder.inverse_find(root->get(i)->action());
-        sr[index] = root->get(i)->n();
+        sr.index_put_({ index }, root->get(i)->n());
     }
     sr = torch::softmax(sr, 0);
     search_results.push_back(sr);
+    */
 
     //make root the chosen child
     move action = root->get(index)->action();
@@ -263,7 +261,7 @@ unsigned agent::select(node* parent)
 double agent::expand(node* Node)
 {
 	//for every legal move, we have to create a new node
-	Node->expand(pn);
+	Node->expand();
 	return (Node->terminal()) ? eval(Node) : mcts_step(Node->get(select(Node)));
 }
 

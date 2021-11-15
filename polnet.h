@@ -9,7 +9,7 @@ struct polnetImpl : torch::nn::Module
 	torch::Tensor forward(torch::Tensor x); //for recording the full tensor for training
 	torch::nn::Conv2d c1, c2;
 	torch::nn::Flatten flatten;
-	torch::nn::Linear fc1, fc2, fc3;
+	torch::nn::Linear fc1, fc2, fc3, fc4;
 	torch::Device device;
 
 	mdis disc;

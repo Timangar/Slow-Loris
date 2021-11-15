@@ -2,12 +2,13 @@
 
 polnetImpl::polnetImpl() :
 	device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU),
-	c1(register_module("c1", torch::nn::Conv2d(6, 128, 4))),
-	c2(register_module("c2", torch::nn::Conv2d(128, 128, 5))),
+	c1(register_module("c1", torch::nn::Conv2d(6, 284, 4))),
+	c2(register_module("c2", torch::nn::Conv2d(284, 512, 5))),
 	flatten(register_module("flatten", torch::nn::Flatten())),
-	fc1(register_module("fc1", torch::nn::Linear(128, 512))),
-	fc2(register_module("fc2", torch::nn::Linear(512, 1024))),
-	fc3(register_module("fc3", torch::nn::Linear(1024, 1792)))
+	fc1(register_module("fc1", torch::nn::Linear(512, 1024))),
+	fc2(register_module("fc2", torch::nn::Linear(1024, 2048))),
+    fc3(register_module("fc3", torch::nn::Linear(2048, 4096))),
+	fc4(register_module("fc4", torch::nn::Linear(4096, 1792)))
 {}
 
 torch::Tensor polnetImpl::forward(const state & s)
@@ -38,22 +39,18 @@ torch::Tensor polnetImpl::forward(const state & s)
                 if (pcolor)
                     x[0][ptype - 1][(int64_t)7 - (int64_t)i][(int64_t)7 - (int64_t)j] = -pcolor;
             }
-    try {
-    x = torch::relu(c1(x.contiguous()));
-    x = flatten(torch::relu(c2(x.contiguous())));
-    x = torch::relu(fc1(x.contiguous()));
-    x = torch::relu(fc2(x.contiguous()));
-    x = fc3(x.contiguous());
-    x = torch::softmax(x.contiguous().view(1792), 0);
 
-    torch::Tensor ret = disc.discriminate(x, s, device);
+    x = torch::relu(c1(x));
+    x = flatten(torch::relu(c2(x)));
+    x = torch::relu(fc1(x));
+    x = torch::relu(fc2(x));
+    x = torch::relu(fc3(x));
+    x = fc4(x);
+    x = torch::softmax(x.view(1792), 0);
 
-    return ret.detach();
-    }
-    catch (const c10::Error e) {
-        std::cerr << std::endl << "ERROR::POLNET: RACE CONDITION" << std::endl << std::endl;
-        std::cerr << e.what() << std::endl;
-    }
+    x = disc.discriminate(x, s, device).detach();
+
+    return x;
 }
 
 torch::Tensor polnetImpl::forward(torch::Tensor x)
@@ -62,8 +59,8 @@ torch::Tensor polnetImpl::forward(torch::Tensor x)
     x = flatten(torch::relu(c2(x)));
     x = torch::relu(fc1(x));
     x = torch::relu(fc2(x));
-    x = fc3(x);
+    x = torch::relu(fc3(x));
+    x = fc4(x);
     x = torch::softmax(x, 1);
-
     return x;
 }

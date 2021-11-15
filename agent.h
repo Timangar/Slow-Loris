@@ -22,9 +22,7 @@ private:
 
 	valnet vn;									//the value net
 	torch::optim::Adam* val_adam;				//the optimizer for valnet
-	polnet pn;
-	torch::optim::Adam* pol_adam;
-	torch::Device device;						//the device that handles machine learning
+	torch::Device device;						//the hardware that handles machine learning
 
 	std::mutex dv;								//to savely increment depth
 
