@@ -9,14 +9,23 @@ move::move(int origin, int destination, bool castle, bool en_passant, bool promo
 	this->promotion = promotion;
 }
 
-bool move::operator==(move& m) const
+bool move::operator==(const move& m) const
 {
 	if (
 		origin == m.origin &&
 		destination == m.destination
 		) {
-		m = *this;
 		return true;
 	}
 	return false;
+}
+
+bool move::operator<(const move& m) const
+{
+	if (origin < m.origin)
+		return true;
+	else if (origin == m.origin)
+		return (destination < m.destination);
+	else
+		return false;
 }

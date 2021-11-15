@@ -1,5 +1,6 @@
 #pragma once
 #include "legal_move_generator.h"
+#include "polnet.h"
 #include <memory>
 #include <mutex>
 
@@ -7,8 +8,8 @@ class node
 {
 public:
 	node& operator=(const node& other);
-	node(const node* parent, move action);
-	node(state s);
+	node(const node* parent, const move& action, double prob = -1.0);
+	node(const state& s, std::vector<state> history, const move& m);
 	node();
 	~node();
 
@@ -24,7 +25,7 @@ public:
 	node* get(int i);
 
 	int n() const;
-	int t() const;
+	float t() const;
 	int o() const;
 
 	bool terminal() const;				//true if the state is a terminal state
@@ -43,13 +44,18 @@ public:
 
 	int color() const;
 
+	double move_prob() const;
+	void set_move_prob(double n_prob);
+
 
 private:
 	std::mutex lock;
 	state _current;								//current state of this node
 	std::vector<state> _history;				//history leading to this node
 
-	//std::mutex lock;
+	int failed_on;
+
+	double _move_prob;							//likelihood of this move being played according to polnet
 
 	std::unique_ptr<node[]> _children;			//leaf nodes
 	std::unique_ptr<node[]> children();
@@ -58,7 +64,7 @@ private:
 	unsigned _size = 0;
 
 	int _n;										//visit count
-	double _t;									//total value
+	float _t;									//total value
 	int _o;										//active threads on node
 
 	move _action;								//the action that was taken to get to this state
