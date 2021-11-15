@@ -7,6 +7,6 @@
 
 int main(void)
 {
-	train(3000, 100, 0.2f, 1.0f);
-	//play();
+	//train(3000, 100, 0.2f, 1.0f);
+	play();
 }
