@@ -1,11 +1,12 @@
+#pragma once
 #include "perft.h"
 #include "play.h"
-#include <torch/torch.h>
+#include "valnet.h"
+#include "polnet.h"
 
 
 int main(void)
 {
-	torch::Tensor t = torch::rand({ 2, 2 });
-	std::cout << t << std::endl;
-	play();
+	train(3000, 100, 0.2f, 1.0f);
+	//play();
 }

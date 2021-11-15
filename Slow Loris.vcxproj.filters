@@ -99,6 +99,15 @@
     <ClInclude Include="node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="valnet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="polnet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="move_discriminator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="chess_environment.cpp">
@@ -174,6 +183,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="valnet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="train.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="polnet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="move_discriminator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

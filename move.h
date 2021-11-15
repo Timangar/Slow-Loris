@@ -8,7 +8,8 @@ struct move
 {
 	move(int origin, int destination, bool castle = false, bool en_passant = false, bool promotion = false);
 
-	bool operator==(move& m) const;
+	bool operator==(const move& m) const;
+	bool operator<(const move& m) const;
 
 	int origin;
 	int destination;

@@ -1,5 +1,6 @@
 #include "node.h"
 #include <cassert>
+#include "tools.h"
 
 node& node::operator=(const node& other)
 {
@@ -8,30 +9,50 @@ node& node::operator=(const node& other)
 	_current = other._current;
 	_expanded = other._expanded;
 	_history = other._history;
+	_move_prob = other._move_prob;
 	_n = other._n;
 	_t = other._t;
 	_o = other._o;
 
-	//_children = other.children();
 	return *this;
 }
 
-node::node(const node* parent, move action)
+node::node(const node* parent, const move& action, double prob)
 	: _n(0), _t(0), _o(0), _action(action), _current(parent->_current)
 {
-	if (!action.castle &&
-		!parent->_current.position[action.destination].get_color() &&
-		!parent->_current.position[action.origin].get_type() == 6)
+	//change color of node
+	_current.turn *= -1;
+	_move_prob = prob;
+
+	volatile bool pb = true;
+	failed_on = 4;
+
+	if (action.castle) {
+		pb = false;
+		failed_on = 1;
+	}
+	if (_current.position[action.destination].get_color()) {
+		pb = false;
+		failed_on = 2;
+	}
+	if (_current.position[action.origin].get_type() == 6) {
+		pb = false;
+		failed_on = 3;
+	}
+	if (pb) {
 		_history = parent->_history;
-	lmg gen;
-	gen.gen(_current, action, _history);
-	_size = _current.legal_moves.size();
-	//delete gen;
-	//std::cout << "node created" << std::endl;
+		_history.push_back(_current);
+	}
 }
 
-node::node(state s) : _n(0), _t(0), _o(0), _action(0, 0), _current(s) { _size = _current.legal_moves.size(); }
-node::node() : _n(0), _t(0), _o(0), _action(0, 0), _current() {}
+node::node(const state& s, std::vector<state> history, const move& m) : _n(0), _t(0), _o(0), _action(m), _current(s), _move_prob(-1.0f)
+{ 
+	//these are only called when reassigning the root in agent. color of state remains unchanged.
+	_history = history;
+	_size = _current.legal_moves.size(); 
+	failed_on = 0;
+}
+node::node() : _n(0), _t(0), _o(0), _action(0, 0), _current(), _move_prob(-1.0f) { failed_on = 0; }
 
 node::~node()
 {
@@ -76,12 +97,31 @@ bool node::inherit(unsigned index)
 void node::expand()
 {
 	std::lock_guard<std::mutex> l(lock);
-	if (_children.get() == nullptr && _size > 0) {
-		node* intermediate = new node[_size];
-		for (unsigned i = 0; i < _size; i++) {
-			intermediate[i] = { this, _current.legal_moves[i] };
+	//torch::NoGradGuard no_grad;
+	if (!_expanded) {
+		if (!_current.terminal_state && !_size) { //it is possible that the pos is already evaluated if reassignment has happened
+			//calculate possible moves
+			if (failed_on < 0 || 4 < failed_on) {
+				tools tool;
+				tool.log_state(_current);
+				__debugbreak();
+			}
+			lmg gen;
+			gen.gen(_current, _action, _history);
+			_size = _current.legal_moves.size();
 		}
-		_children.reset(intermediate);
+		if (_size) {
+			//expand tree by amount of legal moves
+			node* intermediate = new node[_size];
+
+			//calculate move probabilities
+			//torch::Tensor probs = pn->forward(_current).detach();
+			for (int i = 0; i < _size; i++) {
+				//double m_prob = probs.detach().index({ i }).item<double>();
+				intermediate[i] = { this, _current.legal_moves[i], 1.0 / _size };
+			}
+			_children.reset(intermediate);
+		}
 		_expanded = true;
 	}
 }
@@ -93,7 +133,7 @@ bool node::expanded() const
 
 node* node::get(int i)
 {
-	if (i >= _size || _children == nullptr)
+	if (!_expanded)
 		__debugbreak();
 	return _children.get() + i;
 }
@@ -103,7 +143,7 @@ int node::n() const
 	return _n;
 }
 
-int node::t() const
+float node::t() const
 {
 	return _t;
 }
@@ -143,7 +183,6 @@ std::array<piece, 64> node::position() const
 
 const move& node::action() const
 {
-	// TODO: hier return-Anweisung eingeben
 	return _action;
 }
 
@@ -174,6 +213,16 @@ void node::decrement_o()
 int node::color() const
 {
 	return _current.turn;
+}
+
+double node::move_prob() const
+{
+	return _move_prob;
+}
+
+void node::set_move_prob(double n_prob)
+{
+	_move_prob = n_prob;
 }
 
 std::unique_ptr<node[]> node::children()

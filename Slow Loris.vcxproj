@@ -31,9 +31,11 @@
     <ClInclude Include="legal_move_generator.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_array.h" />
+    <ClInclude Include="move_discriminator.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="piece.h" />
+    <ClInclude Include="polnet.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="src\perft.h" />
     <ClInclude Include="src\play.h" />
@@ -41,6 +43,7 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="tools.h" />
+    <ClInclude Include="valnet.h" />
     <ClInclude Include="VertexArray.h" />
     <ClInclude Include="VertexBuffer.h" />
   </ItemGroup>
@@ -56,9 +59,11 @@
     <ClCompile Include="legal_move_generator.cpp" />
     <ClCompile Include="move.cpp" />
     <ClCompile Include="move_array.cpp" />
+    <ClCompile Include="move_discriminator.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="piece.cpp" />
+    <ClCompile Include="polnet.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="src\Perftest.cpp" />
     <ClCompile Include="src\play.cpp" />
@@ -68,6 +73,8 @@
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="tools.cpp" />
+    <ClCompile Include="train.cpp" />
+    <ClCompile Include="valnet.cpp" />
     <ClCompile Include="VertexArray.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />
   </ItemGroup>
@@ -202,7 +209,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\x64;C:\Dev\global_dependencies\libtorch\lib;$(SolutionDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;glew64s.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;torch.lib;torch_cuda.lib;caffe2_nvrtc.lib;c10.lib;c10_cuda.lib;torch_cpu.lib;\INCLUDE:"?warp_size@cuda@at@@YAHXZ";%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;glew64s.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;c10.lib;kineto.lib;C:\Program Files\NVIDIA Corporation\NvToolsExt\\lib\x64\nvToolsExt64_1.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\lib\x64\cudart_static.lib;caffe2_nvrtc.lib;c10_cuda.lib;torch.lib;torch_cuda.lib;torch_cuda_cu.lib;torch_cuda_cpp.lib;torch_cpu.lib;-INCLUDE:?warp_size@cuda@at@@YAHXZ;C:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64\nvToolsExt64_1.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\lib\x64\cufft.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\lib\x64\curand.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\lib\x64\cublas.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\lib\x64\cudnn.lib;-INCLUDE:?searchsorted_cuda@native@at@@YA?AVTensor@2@AEBV32@0_N1@Z;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -217,15 +224,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Dev\global_dependencies\libtorch\include\torch\csrc\api\include;C:\Dev\global_dependencies\libtorch\include;$(ProjectDir);$(ProjectDir)/src;$(SolutionDir)Dependencies\Include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\NVIDIA Corporation\NvToolsExt\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\include;C:\Program Files\NVIDIA Corporation\NvToolsExt\\include;C:\Dev\global_dependencies\libtorch_release\libtorch\include\torch\csrc\api\include;C:\Dev\global_dependencies\libtorch_release\libtorch\include;$(ProjectDir);$(ProjectDir)/src;$(SolutionDir)Dependencies\Include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib\x64;C:\Dev\global_dependencies\libtorch\lib;$(SolutionDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;glew64s.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;torch.lib;torch_cuda.lib;caffe2_nvrtc.lib;c10.lib;c10_cuda.lib;torch_cpu.lib;\INCLUDE:"?warp_size@cuda@at@@YAHXZ";%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Dev\global_dependencies\libtorch_release\libtorch\lib;$(SolutionDir)Dependencies\lib\x64;$(SolutionDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;glew64s.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;c10.lib;kineto.lib;C:\Program Files\NVIDIA Corporation\NvToolsExt\\lib\x64\nvToolsExt64_1.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\lib\x64\cudart_static.lib;caffe2_nvrtc.lib;c10_cuda.lib;torch.lib;torch_cuda.lib;torch_cuda_cu.lib;torch_cuda_cpp.lib;torch_cpu.lib;-INCLUDE:?warp_size@cuda@at@@YAHXZ;C:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64\nvToolsExt64_1.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\lib\x64\cufft.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\lib\x64\curand.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\lib\x64\cublas.lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\lib\x64\cudnn.lib;-INCLUDE:?searchsorted_cuda@native@at@@YA?AVTensor@2@AEBV32@0_N1@Z;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
