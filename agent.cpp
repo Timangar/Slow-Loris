@@ -23,7 +23,7 @@ void agent::think()
 {
     //determine max depth and number of threads
     const unsigned n_threads = 4;
-    const unsigned max_depth = 2000;
+    const unsigned max_depth = 600;
 
     //reset current depth before search
     depth = 0;
@@ -164,7 +164,7 @@ move agent::train_act(const state& s, std::vector<state> history, const move& m)
 
     //add extra exploration in first 15 moves by selecting moves at random (weighted by search)
     //choose best move if move is above move 15 (30 half moves)
-    if (history.size() > 20) {
+    if (history.size() > 12) {
         int highscore = 0;
         for (unsigned i = 0; i < root->size(); i++) {
             int score = root->get(i)->n();
