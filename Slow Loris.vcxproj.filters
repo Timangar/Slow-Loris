@@ -197,6 +197,9 @@
     <ClCompile Include="move_discriminator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="arena.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="FragmentShader.txt">

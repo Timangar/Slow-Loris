@@ -6,10 +6,10 @@
 
 std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-agent::agent(bool load, double c, double learning_rate, std::string fen)
+agent::agent(bool load, double c, double learning_rate, std::string net)
     : c(c), root(new node), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU), depth(0) {
     if (load)
-        torch::load(vn, "valnet.pt");
+        torch::load(vn, net);
     vn->to(device);
     val_adam = new torch::optim::Adam(vn->parameters(), torch::optim::AdamOptions(learning_rate));
 }
