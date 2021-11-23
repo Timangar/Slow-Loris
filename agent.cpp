@@ -22,7 +22,7 @@ agent::~agent()
 void agent::think()
 {
     //determine max depth and number of threads
-    const unsigned n_threads = 4;
+    const unsigned n_threads = 5;
     const unsigned max_depth = 600;
 
     //reset current depth before search
@@ -90,7 +90,7 @@ void agent::train(float target)
     //generate policy target batch from played moves
     //torch::Tensor y_pol = torch::stack(search_results).to(device);
 
-    for (int t_epoch = 1; t_epoch <= 2; t_epoch++)
+    for (int t_epoch = 1; t_epoch <= 3; t_epoch++)
     {
         //valnet
         //----------------------------------------
