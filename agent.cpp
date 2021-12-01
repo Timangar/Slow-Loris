@@ -22,7 +22,7 @@ agent::~agent()
 void agent::think()
 {
     //determine max depth and number of threads
-    const unsigned n_threads = 5;
+    const unsigned n_threads = 4;
     const unsigned max_depth = 600;
 
     //reset current depth before search
