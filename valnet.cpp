@@ -2,8 +2,7 @@
 
 
 valnetImpl::valnetImpl() :
-    //device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU),
-    device(torch::kCPU),
+    device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU),
     c1(register_module("c1", torch::nn::Conv2d(6, 128, 4))),
     c2(register_module("c2", torch::nn::Conv2d(128, 128, 5))),
     flatten(register_module("flatten", torch::nn::Flatten())),

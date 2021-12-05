@@ -7,7 +7,7 @@
 std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 agent::agent(bool load, double c, double learning_rate, std::string fen)
-    : c(c), root(new node), /*device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU)*/ device(torch::kCPU), depth(0) {
+    : c(c), root(new node), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU), depth(0) {
     if (load)
         torch::load(vn, "valnet.pt");
     vn->to(device);
@@ -23,7 +23,7 @@ void agent::think()
 {
     //determine max depth and number of threads
     const unsigned n_threads = 4;
-    const unsigned max_depth = 10000;
+    const unsigned max_depth = 20000;
 
     //reset current depth before search
     depth = 0;
