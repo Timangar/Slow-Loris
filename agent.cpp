@@ -6,10 +6,10 @@
 
 std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-agent::agent(bool load, double c, double learning_rate, std::string net)
+agent::agent(bool load, double c, double learning_rate, std::string fen)
     : c(c), root(new node), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU), depth(0) {
     if (load)
-        torch::load(vn, net);
+        torch::load(vn, "valnet.pt");
     vn->to(device);
     val_adam = new torch::optim::Adam(vn->parameters(), torch::optim::AdamOptions(learning_rate));
 }
@@ -23,7 +23,7 @@ void agent::think()
 {
     //determine max depth and number of threads
     const unsigned n_threads = 4;
-    const unsigned max_depth = 10000;
+    const unsigned max_depth = 1000;
 
     //reset current depth before search
     depth = 0;
@@ -164,7 +164,7 @@ move agent::train_act(const state& s, std::vector<state> history, const move& m)
 
     //add extra exploration in first 15 moves by selecting moves at random (weighted by search)
     //choose best move if move is above move 15 (30 half moves)
-    if (history.size() > 20) {
+    if (history.size() > 12) {
         int highscore = 0;
         for (unsigned i = 0; i < root->size(); i++) {
             int score = root->get(i)->n();
@@ -284,20 +284,14 @@ double agent::mcts_step(node* Node)
         //has it been visited before?
         if (Node->n())
             //yes: expand and evaluate best child
-        {
             evaluation = expand(Node); //check if terminal state and node cannot be expanded
-        }
         else
             //no: evaluate this node
-        {
             evaluation = eval(Node);
-        }
     }
     else 
         //no (not a leaf node): pick the best child node to examine
-    {
         evaluation = mcts_step(Node->get(select(Node)));
-    }
 
     //backpropagate
     //the evaluation has to be flipped. a black node with white winning needs val -x, with black winning x and vice versa.

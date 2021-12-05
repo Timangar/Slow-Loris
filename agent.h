@@ -7,7 +7,7 @@
 class agent
 {
 public:
-	agent(bool load = true, double c = 2.5, double learning_rate = 0.0002, std::string net = "valnet.pt");
+	agent(bool load = true, double c = 2.5, double learning_rate = 0.0002, std::string fen = start_fen);
 	~agent();
 
 	move act(const state& s, const move& m = { 0, 0 });							//act on thoughts
