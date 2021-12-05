@@ -7,7 +7,7 @@
 std::string const agent::start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 agent::agent(bool load, double c, double learning_rate, std::string fen)
-    : c(c), root(new node), device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU), depth(0) {
+    : c(c), root(new node), /*device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU)*/ device(torch::kCPU), depth(0) {
     if (load)
         torch::load(vn, "valnet.pt");
     vn->to(device);
@@ -90,7 +90,7 @@ void agent::train(float target)
     //generate policy target batch from played moves
     //torch::Tensor y_pol = torch::stack(search_results).to(device);
 
-    for (int t_epoch = 1; t_epoch <= 3; t_epoch++)
+    for (int t_epoch = 1; t_epoch <= 2; t_epoch++)
     {
         //valnet
         //----------------------------------------
@@ -284,20 +284,14 @@ double agent::mcts_step(node* Node)
         //has it been visited before?
         if (Node->n())
             //yes: expand and evaluate best child
-        {
             evaluation = expand(Node); //check if terminal state and node cannot be expanded
-        }
         else
             //no: evaluate this node
-        {
             evaluation = eval(Node);
-        }
     }
     else 
         //no (not a leaf node): pick the best child node to examine
-    {
         evaluation = mcts_step(Node->get(select(Node)));
-    }
 
     //backpropagate
     //the evaluation has to be flipped. a black node with white winning needs val -x, with black winning x and vice versa.

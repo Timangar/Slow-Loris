@@ -3,16 +3,15 @@
 #include "agent.h"
 #include <math.h>
 
-void train(int epochs, int render_intervall, float epsilon, float decay)
+void train(int epochs, int render_intervall)
 {
 	chess_environment* env = new chess_environment;
-	agent* loris = new agent(true, 2, 0.0005);
+	agent* loris = new agent(true, 2, 0.0001);
 
 	for (unsigned epoch = 0; epoch < epochs; epoch++)
 	{
 		//env->set("3qk3/8/8/8/8/8/8/4K3 w - - 0 1");
 		env->reset();
-		epsilon *= decay;
 		unsigned i = 0;
 		auto begin = std::chrono::high_resolution_clock::now();
 
