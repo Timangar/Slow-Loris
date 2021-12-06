@@ -17,7 +17,7 @@ void train(int epochs, int render_intervall)
 
 		while (!env->get_state().terminal_state)
 		{
-			env->agent_input(loris->train_act(env->get_state(), env->get_history()));
+			env->agent_input(loris->train_act(env->get_state(), env->get_history(), i));
 			if (epoch % render_intervall == 0) {
 				env->render();
 			}

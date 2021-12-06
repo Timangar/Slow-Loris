@@ -64,12 +64,14 @@ void chess_environment::unmake_move()
 
 std::vector<state>& chess_environment::get_history()
 {
+    return history;
     std::vector<state> hist;
     hist.reserve(current_state.fifty_move_count);
     if (!history.size())
-        return;
+        return hist;
     for (int i = current_state.fifty_move_count; i > 0; i--)
         hist.push_back(history.at(history.size() - i));
+    //std::cerr << current_state.fifty_move_count << " " << history.size();
     return hist;
 }
 

@@ -12,7 +12,7 @@ public:
 
 	move act(const state& s, const move& m = { 0, 0 });							//act on thoughts
 	void train(float target);					//train based on training data
-	move train_act(const state& s, std::vector<state> history, const move& m = { 0, 0 });
+	move train_act(const state& s, std::vector<state> history, int move_count, const move& m = { 0, 0 });
 
 	static std::string const start_fen;			//starting position as fen string
 private:

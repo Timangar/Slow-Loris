@@ -136,7 +136,7 @@ void agent::train(float target)
     //torch::save(pn, "polnet.pt");
 }
 
-move agent::train_act(const state& s, std::vector<state> history, const move& m)
+move agent::train_act(const state& s, std::vector<state> history, int move_count, const move& m)
 {
     //this function replaces "act" during training and involves making random moves. 
     //as it is used exclusively in self play, the reassignment in the end is deleted
@@ -164,7 +164,7 @@ move agent::train_act(const state& s, std::vector<state> history, const move& m)
 
     //add extra exploration in first 15 moves by selecting moves at random (weighted by search)
     //choose best move if move is above move 15 (30 half moves)
-    if (history.size() > 12) {
+    if (move_count > 12) {
         int highscore = 0;
         for (unsigned i = 0; i < root->size(); i++) {
             int score = root->get(i)->n();
