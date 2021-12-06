@@ -5,5 +5,5 @@
 
 int main(void)
 {
-	arena("..//..//weights//valnet-34000.pt", "..//..//weights//valnet-12000.pt", 50, 1);
+	arena("..//..//weights//valnet-22000-experimental.pt", "..//..//weights//valnet-18000.pt", 50, 1);
 }

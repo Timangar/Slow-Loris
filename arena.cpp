@@ -10,8 +10,8 @@ void arena(std::string engine1, std::string engine2, int epochs, int render_inte
 	int draw = 0;
 
 	chess_environment* env = new chess_environment;
-	agent* player1 = new agent(true, 2, 0, engine1);
-	agent* player2 = new agent(true, 2, 0, engine2);
+	agent* player1 = new agent(true, 2.2, 0, engine1);
+	agent* player2 = new agent(true, 2.2, 0, engine2);
 
 	for (unsigned epoch = 0; epoch < epochs; epoch++)
 	{
